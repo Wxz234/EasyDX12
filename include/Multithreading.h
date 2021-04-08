@@ -1,13 +1,11 @@
 #pragma once
 #pragma comment(lib,"d3d12.lib")
-#pragma comment(lib,"dxgi.lib")
 #include <d3d12.h>
-#include <dxgi1_6.h>
-#include <thread>
+#include <wrl/client.h>
 namespace EasyDX12 {
 	class MultithreadingCommandLists {
 	public:
-		MultithreadingCommandLists(_In_ ID3D12CommandQueue* queue) {}
+		MultithreadingCommandLists(_In_ ID3D12Device* device) noexcept : mDevice(device) {}
 		virtual ~MultithreadingCommandLists() {}
 
 		MultithreadingCommandLists(MultithreadingCommandLists&&) noexcept = default;
@@ -15,6 +13,9 @@ namespace EasyDX12 {
 
 		MultithreadingCommandLists(const MultithreadingCommandLists&) = delete;
 		MultithreadingCommandLists& operator=(const MultithreadingCommandLists&) = delete;
+
+		void Execute(_In_ ID3D12CommandQueue *queue) {}
 	private:
+		Microsoft::WRL::ComPtr<ID3D12Device> mDevice;
 	};
 }
