@@ -3,6 +3,16 @@
 #include <dxgi1_6.h>
 
 namespace EasyDX12 {
+	inline HRESULT __cdecl CreateFactory(_COM_Outptr_ IDXGIFactory** ppFactory) {
+		return CreateDXGIFactory2(0, IID_PPV_ARGS(ppFactory));
+	}
+	inline HRESULT __cdecl GetWarpAdapter(_In_ IDXGIFactory* factory, _COM_Outptr_ IDXGIAdapter** ppvAdapter) {
+		IDXGIFactory4* factory4;
+		factory->QueryInterface(&factory4);
+		auto HR = factory4->EnumWarpAdapter(IID_PPV_ARGS(ppvAdapter));
+		factory4->Release();
+		return HR;
+	}
 	inline HRESULT __cdecl GetDefaultAdapter(_In_ IDXGIFactory* factory, _COM_Outptr_ IDXGIAdapter** ppvAdapter) {
 		return factory->EnumAdapters(0, ppvAdapter);
 	}
