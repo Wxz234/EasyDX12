@@ -10,4 +10,13 @@ namespace EasyDX12 {
 		}
 		return false;
 	}
+
+	inline bool __cdecl IsMeshShaderSupported(_In_ ID3D12Device* device) {
+		D3D12_FEATURE_DATA_D3D12_OPTIONS7 featureSupportData = {};
+		if (SUCCEEDED(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &featureSupportData, sizeof(featureSupportData)))
+			&& featureSupportData.MeshShaderTier != D3D12_MESH_SHADER_TIER_NOT_SUPPORTED) {
+			return true;
+		}
+		return false;
+	}
 }
