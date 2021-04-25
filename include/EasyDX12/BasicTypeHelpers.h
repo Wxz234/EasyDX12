@@ -3,6 +3,7 @@
 #pragma comment(lib,"dxgi.lib")
 #include <d3d12.h>
 #include <dxgi1_6.h>
+#include <string>
 namespace EasyDX12 {
 	inline HRESULT __cdecl CreateDirectCommandQueue(_In_ ID3D12Device* device, _COM_Outptr_ ID3D12CommandQueue** ppCommandQueue) {
 		D3D12_COMMAND_QUEUE_DESC queueDesc = {};
@@ -50,5 +51,14 @@ namespace EasyDX12 {
 		auto HR = factory6->EnumAdapterByGpuPreference(0, DXGI_GPU_PREFERENCE_MINIMUM_POWER, IID_PPV_ARGS(ppvAdapter));
 		factory6->Release();
 		return HR;
+	}
+
+	inline std::wstring __cdecl GetAdapterName(_In_ IDXGIAdapter *adapter) {
+		if (adapter) {
+			DXGI_ADAPTER_DESC desc;
+			adapter->GetDesc(&desc);
+			return std::wstring(desc.Description);
+		}
+		return L"";
 	}
 }
