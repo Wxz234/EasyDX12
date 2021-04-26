@@ -37,7 +37,7 @@ namespace EasyDX12 {
 		return L"";
 	}
 
-	inline bool __cdecl IsAdapterNVIDIA(_In_ IDXGIAdapter* adapter) {
+	inline bool __cdecl IsNVIDIAAdapter(_In_ IDXGIAdapter* adapter) {
 		DXGI_ADAPTER_DESC desc;
 		adapter->GetDesc(&desc);
 		if (desc.VendorId == 0x10DE) {
@@ -46,7 +46,7 @@ namespace EasyDX12 {
 		return false;
 	}
 
-	inline bool __cdecl IsAdapterAMD(_In_ IDXGIAdapter* adapter) {
+	inline bool __cdecl IsAMDAdapter(_In_ IDXGIAdapter* adapter) {
 		DXGI_ADAPTER_DESC desc;
 		adapter->GetDesc(&desc);
 		if (desc.VendorId == 0x1002) {
@@ -55,7 +55,7 @@ namespace EasyDX12 {
 		return false;
 	}
 
-	inline bool __cdecl IsAdapterIntel(_In_ IDXGIAdapter* adapter) {
+	inline bool __cdecl IsIntelAdapter(_In_ IDXGIAdapter* adapter) {
 		DXGI_ADAPTER_DESC desc;
 		adapter->GetDesc(&desc);
 		if (desc.VendorId == 0x8086) {
