@@ -20,11 +20,10 @@ namespace EasyDX12 {
 		return false;
 	}
 
-	inline bool __cdecl IsShaderModel6Supported(_In_ ID3D12Device* device) {
-		D3D12_FEATURE_DATA_SHADER_MODEL shaderModel = { D3D_SHADER_MODEL_6_0 };
+	inline bool __cdecl IsShaderModelSupported(_In_ ID3D12Device* device,_In_ D3D_SHADER_MODEL shader_model) {
+		D3D12_FEATURE_DATA_SHADER_MODEL shaderModel = { shader_model };
 		if (FAILED(device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &shaderModel, sizeof(shaderModel)))
-			|| (shaderModel.HighestShaderModel < D3D_SHADER_MODEL_6_0))
-		{
+			|| (shaderModel.HighestShaderModel < shader_model)){
 			return false;
 		}
 		return true;

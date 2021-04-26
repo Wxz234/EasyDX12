@@ -1,3 +1,3 @@
 #pragma once
-#include "BasicTypeHelpers.h"
+#include "AdapterHelpers.h"
 #include "FeatureSupport.h"
