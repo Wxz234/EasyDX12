@@ -126,4 +126,17 @@ namespace EasyDX12 {
 		return false;
 	}
 
+	inline bool __cdecl IsWarpAdapter(_In_ IDXGIAdapter* adapter) {
+		if (!adapter)
+			return false;
+		DXGI_ADAPTER_DESC desc;
+		HRESULT hr = adapter->GetDesc(&desc);
+		if (FAILED(hr))
+			return false;
+		if (desc.VendorId == 0x1414) {
+			return true;
+		}
+		return false;
+	}
+
 }
