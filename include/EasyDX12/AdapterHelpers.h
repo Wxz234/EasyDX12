@@ -57,6 +57,7 @@ namespace EasyDX12 {
 		*ppvAdapter = myadapter.Detach();
 		return S_OK;
 	}
+
 	inline HRESULT __cdecl GetMinimumPowerAdapter(_In_ IDXGIFactory* factory, _COM_Outptr_ IDXGIAdapter** ppvAdapter) {
 		if (!ppvAdapter)
 			return E_INVALIDARG;
@@ -138,5 +139,4 @@ namespace EasyDX12 {
 		}
 		return false;
 	}
-
 }
