@@ -1,5 +1,7 @@
 #pragma once
+#pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
+#include <d3d12.h>
 #include <dxgi1_6.h>
 #include <wrl/client.h>
 #include <string>
@@ -16,11 +18,11 @@ namespace EasyDX12 {
 		HRESULT hr = myfactory.As(&myfactory4);
 		if (FAILED(hr))
 			return hr;
-		Microsoft::WRL::ComPtr<IDXGIAdapter> myadapter;
-		hr = myfactory4->EnumWarpAdapter(IID_PPV_ARGS(&myadapter));
+		Microsoft::WRL::ComPtr<IDXGIAdapter> myAdapter;
+		hr = myfactory4->EnumWarpAdapter(IID_PPV_ARGS(&myAdapter));
 		if (FAILED(hr))
 			return hr;
-		*ppvAdapter = myadapter.Detach();
+		*ppvAdapter = myAdapter.Detach();
 		return S_OK;
 	}
 
@@ -30,11 +32,11 @@ namespace EasyDX12 {
 		*ppvAdapter = nullptr;
 		if (!factory)
 			return E_INVALIDARG;
-		Microsoft::WRL::ComPtr<IDXGIAdapter> myadapter;
-		HRESULT hr = factory->EnumAdapters(0, &myadapter);
+		Microsoft::WRL::ComPtr<IDXGIAdapter> myAdapter;
+		HRESULT hr = factory->EnumAdapters(0, &myAdapter);
 		if (FAILED(hr))
 			return hr;
-		*ppvAdapter = myadapter.Detach();
+		*ppvAdapter = myAdapter.Detach();
 		return S_OK;
 	}
 
@@ -50,11 +52,11 @@ namespace EasyDX12 {
 		HRESULT hr = myfactory.As(&myfactory6);
 		if (FAILED(hr))
 			return hr;
-		Microsoft::WRL::ComPtr<IDXGIAdapter> myadapter;
-		hr = myfactory6->EnumAdapterByGpuPreference(0, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&myadapter));
+		Microsoft::WRL::ComPtr<IDXGIAdapter> myAdapter;
+		hr = myfactory6->EnumAdapterByGpuPreference(0, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&myAdapter));
 		if (FAILED(hr))
 			return hr;
-		*ppvAdapter = myadapter.Detach();
+		*ppvAdapter = myAdapter.Detach();
 		return S_OK;
 	}
 
@@ -70,11 +72,11 @@ namespace EasyDX12 {
 		HRESULT hr = myfactory.As(&myfactory6);
 		if (FAILED(hr))
 			return hr;
-		Microsoft::WRL::ComPtr<IDXGIAdapter> myadapter;
-		hr = myfactory6->EnumAdapterByGpuPreference(0, DXGI_GPU_PREFERENCE_MINIMUM_POWER, IID_PPV_ARGS(&myadapter));
+		Microsoft::WRL::ComPtr<IDXGIAdapter> myAdapter;
+		hr = myfactory6->EnumAdapterByGpuPreference(0, DXGI_GPU_PREFERENCE_MINIMUM_POWER, IID_PPV_ARGS(&myAdapter));
 		if (FAILED(hr))
 			return hr;
-		*ppvAdapter = myadapter.Detach();
+		*ppvAdapter = myAdapter.Detach();
 		return S_OK;
 	}
 
@@ -138,5 +140,24 @@ namespace EasyDX12 {
 			return true;
 		}
 		return false;
+	}
+
+	inline HRESULT __cdecl GetAdapterFromDevice(_In_ ID3D12Device *device, _COM_Outptr_ IDXGIAdapter** ppvAdapter) {
+		if (!ppvAdapter)
+			return E_INVALIDARG;
+		*ppvAdapter = nullptr;
+		if (!device)
+			return E_INVALIDARG;
+		LUID myLUID = device->GetAdapterLuid();
+		Microsoft::WRL::ComPtr<IDXGIFactory4> myFactory;
+		HRESULT hr = CreateDXGIFactory2(0, IID_PPV_ARGS(&myFactory));
+		if (FAILED(hr))
+			return hr;
+		Microsoft::WRL::ComPtr<IDXGIAdapter> myAdapter;
+		hr = myFactory->EnumAdapterByLuid(myLUID, IID_PPV_ARGS(&myAdapter));
+		if (FAILED(hr))
+			return hr;
+		*ppvAdapter = myAdapter.Detach();
+		return S_OK;
 	}
 }

@@ -49,4 +49,14 @@ namespace EasyDX12 {
 		}
 		return false;
 	}
+
+	//从UE4抄的。创建factory5成功就支持HDR，我也不太理解
+	inline bool __cdecl IsHDRSupported() {
+		Microsoft::WRL::ComPtr<IDXGIFactory5> myFactory;
+		HRESULT hr = CreateDXGIFactory2(0, IID_PPV_ARGS(&myFactory));
+		if (SUCCEEDED(hr) && myFactory.Get()) {
+			return true;
+		}
+		return false;
+	}
 }
