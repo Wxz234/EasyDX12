@@ -57,4 +57,20 @@ namespace EasyDX12 {
 	inline HRESULT __cdecl CreateComputeCommandAllocator(_In_ ID3D12Device* device, _COM_Outptr_ ID3D12CommandAllocator** ppCommandAllocator) {
 		return CreateCommandAllocator(device, D3D12_COMMAND_LIST_TYPE_COMPUTE, ppCommandAllocator);
 	}
+
+	class CommandQueue {
+	public:
+		CommandQueue(_In_ ID3D12Device* device,_In_ D3D12_COMMAND_LIST_TYPE type) noexcept {
+			CreateCommandQueue(device, type, &m_Queue);
+		}
+		~CommandQueue() {}
+
+		CommandQueue(CommandQueue&&) noexcept = default;
+		CommandQueue& operator=(CommandQueue&&) noexcept = default;
+
+		CommandQueue(const CommandQueue&) = delete;
+		CommandQueue& operator=(const CommandQueue&) = delete;
+	private:
+		Microsoft::WRL::ComPtr<ID3D12CommandQueue> m_Queue;
+	};
 }
