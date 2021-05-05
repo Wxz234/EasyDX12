@@ -58,4 +58,38 @@ namespace EasyDX12 {
 		return CreateCommandAllocator(device, D3D12_COMMAND_LIST_TYPE_COMPUTE, ppCommandAllocator);
 	}
 
+	inline HRESULT __cdecl FlushCommandQueue(_In_ ID3D12CommandQueue *queue) {
+		if (!queue)
+			return E_INVALIDARG;
+		Microsoft::WRL::ComPtr<ID3D12Device> myDevice;
+		HRESULT hr = queue->GetDevice(IID_PPV_ARGS(&myDevice));
+		if (FAILED(hr))
+			return hr;
+		Microsoft::WRL::ComPtr<ID3D12Fence> myFence;
+		hr = myDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&myFence));
+		if (FAILED(hr))
+			return hr;
+		HANDLE m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+		if (m_fenceEvent == nullptr)
+			return HRESULT_FROM_WIN32(GetLastError());
+		
+		hr = queue->Signal(myFence.Get(), 1);
+		if (FAILED(hr)) {
+			CloseHandle(m_fenceEvent);
+			return hr;
+		}
+		if (myFence->GetCompletedValue() != 1)
+		{
+			hr = myFence->SetEventOnCompletion(1, m_fenceEvent);
+			if (FAILED(hr)) {
+				CloseHandle(m_fenceEvent);
+				return hr;
+			}
+			WaitForSingleObject(m_fenceEvent, INFINITE);
+		}
+
+		CloseHandle(m_fenceEvent);
+		return S_OK;
+	}
+
 }
