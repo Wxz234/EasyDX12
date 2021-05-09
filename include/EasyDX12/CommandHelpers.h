@@ -3,7 +3,7 @@
 #include <d3d12.h>
 #include <wrl/client.h>
 namespace EasyDX12 {
-	inline HRESULT __cdecl CreateCommandQueue(_In_ ID3D12Device* device, _In_ D3D12_COMMAND_LIST_TYPE type,_COM_Outptr_  ID3D12CommandQueue** ppCommandQueue) {
+	inline HRESULT __cdecl CreateCommandQueue(_In_ ID3D12Device* device,D3D12_COMMAND_LIST_TYPE type,_COM_Outptr_ ID3D12CommandQueue** ppCommandQueue) {
 		if (!ppCommandQueue)
 			return E_INVALIDARG;
 		*ppCommandQueue = nullptr;
@@ -20,11 +20,11 @@ namespace EasyDX12 {
 		return S_OK;
 	}
 
-	inline HRESULT __cdecl CreateDirectCommandQueue(_In_ ID3D12Device* device, _COM_Outptr_  ID3D12CommandQueue** ppCommandQueue) {
+	inline HRESULT __cdecl CreateDirectCommandQueue(_In_ ID3D12Device* device, _COM_Outptr_ ID3D12CommandQueue** ppCommandQueue) {
 		return CreateCommandQueue(device, D3D12_COMMAND_LIST_TYPE_DIRECT, ppCommandQueue);
 	}
 
-	inline HRESULT __cdecl CreateCopyCommandQueue(_In_ ID3D12Device* device, _COM_Outptr_  ID3D12CommandQueue** ppCommandQueue) {
+	inline HRESULT __cdecl CreateCopyCommandQueue(_In_ ID3D12Device* device, _COM_Outptr_ ID3D12CommandQueue** ppCommandQueue) {
 		return CreateCommandQueue(device, D3D12_COMMAND_LIST_TYPE_COPY, ppCommandQueue);
 	}
 
@@ -32,7 +32,7 @@ namespace EasyDX12 {
 		return CreateCommandQueue(device, D3D12_COMMAND_LIST_TYPE_COMPUTE, ppCommandQueue);
 	}
 
-	inline HRESULT __cdecl CreateCommandAllocator(_In_ ID3D12Device* device, _In_ D3D12_COMMAND_LIST_TYPE type,_COM_Outptr_ ID3D12CommandAllocator** ppCommandAllocator) {
+	inline HRESULT __cdecl CreateCommandAllocator(_In_ ID3D12Device* device,D3D12_COMMAND_LIST_TYPE type,_COM_Outptr_ ID3D12CommandAllocator** ppCommandAllocator) {
 		if (!ppCommandAllocator)
 			return E_INVALIDARG;
 		*ppCommandAllocator = nullptr;
