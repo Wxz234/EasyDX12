@@ -191,8 +191,13 @@ namespace EasyDX12 {
 				CloseHandle(m_fenceEvent);
 				return hr;
 			}
-			WaitForSingleObject(m_fenceEvent, INFINITE);
-			CloseHandle(m_fenceEvent);
+			if (WaitForSingleObject(m_fenceEvent, INFINITE) == WAIT_FAILED) {
+				CloseHandle(m_fenceEvent);
+				return E_FAIL;
+			}
+			if (CloseHandle(m_fenceEvent) == FALSE) {
+				return HRESULT_FROM_WIN32(GetLastError());
+			}
 		}
 		return S_OK;
 	}
