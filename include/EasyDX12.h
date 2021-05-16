@@ -4,7 +4,15 @@
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <wrl/client.h>
+#include <exception>
+#include <string>
 namespace EasyDX12 {
+	class WIN32_error : public std::exception {
+	public:
+		explicit WIN32_error(const std::string& _Message) : std::exception(_Message.c_str()) {}
+		explicit WIN32_error(const char* _Message) : std::exception(_Message) {}
+	};
+
 	namespace __internal {
 		inline HRESULT __cdecl getAdapter(_In_ IDXGIFactory* factory, DXGI_GPU_PREFERENCE preference, REFIID riid, _COM_Outptr_ void** ppvAdapter) {
 			if (!ppvAdapter)
@@ -49,6 +57,12 @@ namespace EasyDX12 {
 			if (!device)
 				return E_INVALIDARG;
 			return device->CreateCommandAllocator(type, riid, ppCommandAllocator);
+		}
+
+		inline void closeHandle_check(HANDLE handle) {
+			if (CloseHandle(handle) == FALSE) {
+				throw WIN32_error("Handle fail.");
+			}
 		}
 	}
 
@@ -178,9 +192,8 @@ namespace EasyDX12 {
 		if (FAILED(hr))
 			return hr;
 		hr = queue->Signal(myFence.Get(), 1);
-		if (FAILED(hr)) {
+		if (FAILED(hr)) 
 			return hr;
-		}
 		if (myFence->GetCompletedValue() != 1) {
 			HANDLE m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 			if (m_fenceEvent == nullptr) {
@@ -188,16 +201,15 @@ namespace EasyDX12 {
 			}
 			hr = myFence->SetEventOnCompletion(1, m_fenceEvent);
 			if (FAILED(hr)) {
-				CloseHandle(m_fenceEvent);
+				__internal::closeHandle_check(m_fenceEvent);
 				return hr;
 			}
 			if (WaitForSingleObject(m_fenceEvent, INFINITE) == WAIT_FAILED) {
-				CloseHandle(m_fenceEvent);
-				return E_FAIL;
+				hr = HRESULT_FROM_WIN32(GetLastError());
+				__internal::closeHandle_check(m_fenceEvent);
+				return hr;
 			}
-			if (CloseHandle(m_fenceEvent) == FALSE) {
-				return HRESULT_FROM_WIN32(GetLastError());
-			}
+			__internal::closeHandle_check(m_fenceEvent);
 		}
 		return S_OK;
 	}
