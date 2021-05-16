@@ -6,6 +6,8 @@
 #include <wrl/client.h>
 #include <exception>
 #include <string>
+#include <cstring>
+#include <limits>
 namespace EasyDX12 {
 	class WIN32_error : public std::exception {
 	public:
@@ -63,6 +65,17 @@ namespace EasyDX12 {
 			if (CloseHandle(handle) == FALSE) {
 				throw WIN32_error("Handle fail.");
 			}
+		}
+
+		inline void* memcpy_u64(void* _Dst, void const* _Src, UINT64 _Size) {
+			if (_Size <= std::numeric_limits<std::size_t>::max()) {
+				return std::memcpy(_Dst, _Src, static_cast<std::size_t>(_Size));
+			}
+			const char* csrc = (const char*)_Src;
+			char* cdest = (char*)_Dst;
+			for (UINT64 i = 0; i < _Size; ++i)
+				cdest[i] = csrc[i];
+			return _Dst;
 		}
 	}
 
@@ -211,6 +224,120 @@ namespace EasyDX12 {
 			}
 			__internal::closeHandle_check(m_fenceEvent);
 		}
+		return S_OK;
+	}
+
+	inline HRESULT __cdecl CreateConstantBuffer(
+		_In_ ID3D12Device* device,
+		_In_reads_bytes_(count) const void* data,
+		UINT64 count, 
+		REFIID riid, 
+		_COM_Outptr_ void** ppvResource) {
+		if (!ppvResource)
+			return E_INVALIDARG;
+		*ppvResource = nullptr;
+		if (!device || !data || (count == 0))
+			return E_INVALIDARG;
+		if (!(riid == IID_ID3D12Resource || riid == IID_ID3D12Resource1 || riid == IID_ID3D12Resource2)) {
+			return E_INVALIDARG;
+		}
+
+		Microsoft::WRL::ComPtr<ID3D12CommandQueue> myQueue;
+		HRESULT hr = CreateCopyCommandQueue(device, IID_PPV_ARGS(&myQueue));
+		if (FAILED(hr))
+			return hr;
+		Microsoft::WRL::ComPtr<ID3D12CommandAllocator> myAllocator;
+		hr = CreateCopyCommandAllocator(device, IID_PPV_ARGS(&myAllocator));
+		if (FAILED(hr))
+			return hr;
+		Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> myList;
+		hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COPY, myAllocator.Get(), nullptr, IID_PPV_ARGS(&myList));
+		if (FAILED(hr))
+			return hr;
+		Microsoft::WRL::ComPtr<ID3D12Resource> defaultBuffer;
+		D3D12_HEAP_PROPERTIES prop = {};
+		prop.Type = D3D12_HEAP_TYPE_DEFAULT;
+		prop.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+		prop.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+		prop.CreationNodeMask = 1;
+		prop.VisibleNodeMask = 1;
+		D3D12_RESOURCE_DESC desc = {};
+		desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+		desc.Alignment = 0;
+		desc.Width = count;
+		desc.Height = 1;
+		desc.DepthOrArraySize = 1;
+		desc.MipLevels = 1;
+		desc.Format = DXGI_FORMAT_UNKNOWN;
+		desc.SampleDesc.Count = 1;
+		desc.SampleDesc.Quality = 0;
+		desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+		desc.Flags = D3D12_RESOURCE_FLAG_NONE;
+		hr = device->CreateCommittedResource(
+			&prop,
+			D3D12_HEAP_FLAG_NONE,
+			&desc,
+			D3D12_RESOURCE_STATE_COMMON,
+			nullptr,
+			IID_PPV_ARGS(&defaultBuffer));
+		if (FAILED(hr))
+			return hr;
+		Microsoft::WRL::ComPtr<ID3D12Resource> uploadBuffer;
+		prop.Type = D3D12_HEAP_TYPE_UPLOAD;
+		hr = device->CreateCommittedResource(
+			&prop,
+			D3D12_HEAP_FLAG_NONE,
+			&desc,
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS(&uploadBuffer));
+		if (FAILED(hr))
+			return hr;
+		UINT8* pVertexDataBegin;
+		hr = uploadBuffer->Map(0, nullptr, reinterpret_cast<void**>(&pVertexDataBegin));
+		if (FAILED(hr))
+			return hr;
+		__internal::memcpy_u64(pVertexDataBegin, data, count);
+		uploadBuffer->Unmap(0, nullptr);
+
+		D3D12_RESOURCE_BARRIER barrier = {};
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrier.Transition.pResource = defaultBuffer.Get();
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COMMON;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
+		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		myList->ResourceBarrier(1, &barrier);
+		myList->CopyBufferRegion(defaultBuffer.Get(), 0, uploadBuffer.Get(), 0, count);
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COMMON;
+		myList->ResourceBarrier(1, &barrier);
+		hr = myList->Close();
+		if (FAILED(hr))
+			return hr;
+		ID3D12CommandList* ppCommandLists[] = { myList.Get() };
+		myQueue->ExecuteCommandLists(1, ppCommandLists);
+		hr = FlushCommandQueue(myQueue.Get());
+		if (FAILED(hr))
+			return hr;
+		if (riid == IID_ID3D12Resource) {
+			*ppvResource = defaultBuffer.Detach();
+		}
+		if (riid == IID_ID3D12Resource1) {
+			Microsoft::WRL::ComPtr<ID3D12Resource1> myRes1;
+			hr = defaultBuffer.As(&myRes1);
+			if (FAILED(hr))
+				return hr;
+			*ppvResource = myRes1.Detach();
+		}
+		if (riid == IID_ID3D12Resource2) {
+			Microsoft::WRL::ComPtr<ID3D12Resource2> myRes2;
+			hr = defaultBuffer.As(&myRes2);
+			if (FAILED(hr))
+				return hr;
+			*ppvResource = myRes2.Detach();
+		}
+
 		return S_OK;
 	}
 
