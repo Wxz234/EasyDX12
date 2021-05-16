@@ -4,16 +4,11 @@
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <wrl/client.h>
-#include <exception>
-#include <string>
 #include <cstring>
 #include <limits>
+#include <memory>
 namespace EasyDX12 {
-	class WIN32_error : public std::exception {
-	public:
-		explicit WIN32_error(const std::string& _Message) : std::exception(_Message.c_str()) {}
-		explicit WIN32_error(const char* _Message) : std::exception(_Message) {}
-	};
+
 
 	namespace __internal {
 		inline HRESULT __cdecl getAdapter(_In_ IDXGIFactory* factory, DXGI_GPU_PREFERENCE preference, REFIID riid, _COM_Outptr_ void** ppvAdapter) {
@@ -61,12 +56,6 @@ namespace EasyDX12 {
 			return device->CreateCommandAllocator(type, riid, ppCommandAllocator);
 		}
 
-		inline void closeHandle_check(HANDLE handle) {
-			if (CloseHandle(handle) == FALSE) {
-				throw WIN32_error("Handle fail.");
-			}
-		}
-
 		inline void* memcpy_u64(void* _Dst, void const* _Src, UINT64 _Size) {
 			if (_Size <= std::numeric_limits<std::size_t>::max()) {
 				return std::memcpy(_Dst, _Src, static_cast<std::size_t>(_Size));
@@ -77,6 +66,16 @@ namespace EasyDX12 {
 				cdest[i] = csrc[i];
 			return _Dst;
 		}
+
+		struct handle_closer { 
+			void operator()(HANDLE h) noexcept { 
+				if (h && h != INVALID_HANDLE_VALUE) {
+					CloseHandle(h);
+				} 
+			} 
+		};
+		using ScopedHandle = std::unique_ptr<void, handle_closer>;
+		inline HANDLE safe_handle(HANDLE h) noexcept { return (h == INVALID_HANDLE_VALUE) ? nullptr : h; }
 	}
 
 	inline HRESULT __cdecl GetWarpAdapter(_In_ IDXGIFactory* factory, REFIID riid, _COM_Outptr_ void** ppvAdapter) {
@@ -205,24 +204,20 @@ namespace EasyDX12 {
 		if (FAILED(hr))
 			return hr;
 		hr = queue->Signal(myFence.Get(), 1);
-		if (FAILED(hr)) 
+		if (FAILED(hr))
 			return hr;
 		if (myFence->GetCompletedValue() != 1) {
-			HANDLE m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-			if (m_fenceEvent == nullptr) {
+			__internal::ScopedHandle m_fenceEvent(__internal::safe_handle(CreateEvent(nullptr, FALSE, FALSE, nullptr)));
+			if (m_fenceEvent.get() == nullptr) {
 				return HRESULT_FROM_WIN32(GetLastError());
 			}
-			hr = myFence->SetEventOnCompletion(1, m_fenceEvent);
+			hr = myFence->SetEventOnCompletion(1, m_fenceEvent.get());
 			if (FAILED(hr)) {
-				__internal::closeHandle_check(m_fenceEvent);
 				return hr;
 			}
-			if (WaitForSingleObject(m_fenceEvent, INFINITE) == WAIT_FAILED) {
-				hr = HRESULT_FROM_WIN32(GetLastError());
-				__internal::closeHandle_check(m_fenceEvent);
-				return hr;
+			if (WaitForSingleObject(m_fenceEvent.get(), INFINITE) == WAIT_FAILED) {
+				return HRESULT_FROM_WIN32(GetLastError());
 			}
-			__internal::closeHandle_check(m_fenceEvent);
 		}
 		return S_OK;
 	}
@@ -230,17 +225,13 @@ namespace EasyDX12 {
 	inline HRESULT __cdecl CreateConstantBuffer(
 		_In_ ID3D12Device* device,
 		_In_reads_bytes_(count) const void* data,
-		UINT64 count, 
-		REFIID riid, 
-		_COM_Outptr_ void** ppvResource) {
+		UINT64 count,
+		_COM_Outptr_ ID3D12Resource** ppvResource) {
 		if (!ppvResource)
 			return E_INVALIDARG;
 		*ppvResource = nullptr;
 		if (!device || !data || (count == 0))
 			return E_INVALIDARG;
-		if (!(riid == IID_ID3D12Resource || riid == IID_ID3D12Resource1 || riid == IID_ID3D12Resource2)) {
-			return E_INVALIDARG;
-		}
 
 		Microsoft::WRL::ComPtr<ID3D12CommandQueue> myQueue;
 		HRESULT hr = CreateCopyCommandQueue(device, IID_PPV_ARGS(&myQueue));
@@ -320,25 +311,7 @@ namespace EasyDX12 {
 		hr = FlushCommandQueue(myQueue.Get());
 		if (FAILED(hr))
 			return hr;
-		if (riid == IID_ID3D12Resource) {
-			*ppvResource = defaultBuffer.Detach();
-		}
-		if (riid == IID_ID3D12Resource1) {
-			Microsoft::WRL::ComPtr<ID3D12Resource1> myRes1;
-			hr = defaultBuffer.As(&myRes1);
-			if (FAILED(hr))
-				return hr;
-			*ppvResource = myRes1.Detach();
-		}
-		if (riid == IID_ID3D12Resource2) {
-			Microsoft::WRL::ComPtr<ID3D12Resource2> myRes2;
-			hr = defaultBuffer.As(&myRes2);
-			if (FAILED(hr))
-				return hr;
-			*ppvResource = myRes2.Detach();
-		}
-
+		*ppvResource = defaultBuffer.Detach();
 		return S_OK;
 	}
-
 }
