@@ -313,4 +313,5 @@ namespace EasyDX12 {
 		*ppvResource = defaultBuffer.Detach();
 		return S_OK;
 	}
+
 }
