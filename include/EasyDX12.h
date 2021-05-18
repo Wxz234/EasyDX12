@@ -8,8 +8,6 @@
 #include <limits>
 #include <memory>
 namespace EasyDX12 {
-
-
 	namespace __internal {
 		inline HRESULT __cdecl getAdapter(_In_ IDXGIFactory* factory, DXGI_GPU_PREFERENCE preference, REFIID riid, _COM_Outptr_ void** ppvAdapter) {
 			if (!ppvAdapter)
