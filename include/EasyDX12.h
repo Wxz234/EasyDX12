@@ -4,11 +4,9 @@
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <wrl/client.h>
-#include <cstring>
-#include <limits>
-#include <memory>
+#include <wrl/wrappers/corewrappers.h>
 namespace EasyDX12 {
-	namespace __internal {
+	namespace _internal {
 		inline HRESULT __cdecl getAdapter(_In_ IDXGIFactory* factory, DXGI_GPU_PREFERENCE preference, REFIID riid, _COM_Outptr_ void** ppvAdapter) {
 			if (!ppvAdapter)
 				return E_INVALIDARG;
@@ -54,28 +52,7 @@ namespace EasyDX12 {
 			return device->CreateCommandAllocator(type, riid, ppCommandAllocator);
 		}
 
-		inline void* memcpy_u64(void* _Dst, void const* _Src, UINT64 _Size) {
-			if (_Size <= std::numeric_limits<std::size_t>::max()) {
-				return std::memcpy(_Dst, _Src, static_cast<std::size_t>(_Size));
-			}
-			const char* csrc = (const char*)_Src;
-			char* cdest = (char*)_Dst;
-			for (UINT64 i = 0; i < _Size; ++i)
-				cdest[i] = csrc[i];
-			return _Dst;
-		}
-
-		struct handle_closer { 
-			void operator()(HANDLE h) noexcept { 
-				if (h && h != INVALID_HANDLE_VALUE) {
-					CloseHandle(h);
-				} 
-			} 
-		};
-		using ScopedHandle = std::unique_ptr<void, handle_closer>;
-		inline HANDLE safe_handle(HANDLE h) noexcept { return (h == INVALID_HANDLE_VALUE) ? nullptr : h; }
 	}
-
 	inline HRESULT __cdecl GetWarpAdapter(_In_ IDXGIFactory* factory, REFIID riid, _COM_Outptr_ void** ppvAdapter) {
 		if (!ppvAdapter)
 			return E_INVALIDARG;
@@ -91,55 +68,55 @@ namespace EasyDX12 {
 	}
 
 	inline HRESULT __cdecl GetDefaultAdapter(_In_ IDXGIFactory* factory, REFIID riid, _COM_Outptr_ void** ppvAdapter) {
-		return __internal::getAdapter(factory, DXGI_GPU_PREFERENCE_UNSPECIFIED, riid, ppvAdapter);
+		return _internal::getAdapter(factory, DXGI_GPU_PREFERENCE_UNSPECIFIED, riid, ppvAdapter);
 	}
 
 	inline HRESULT __cdecl GetMinimumPowerAdapter(_In_ IDXGIFactory* factory, REFIID riid, _COM_Outptr_ void** ppvAdapter) {
-		return __internal::getAdapter(factory, DXGI_GPU_PREFERENCE_MINIMUM_POWER, riid, ppvAdapter);
+		return _internal::getAdapter(factory, DXGI_GPU_PREFERENCE_MINIMUM_POWER, riid, ppvAdapter);
 	}
 
 	inline HRESULT __cdecl GetHighPerformanceAdapter(_In_ IDXGIFactory* factory, REFIID riid, _COM_Outptr_ void** ppvAdapter) {
-		return __internal::getAdapter(factory, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, riid, ppvAdapter);
+		return _internal::getAdapter(factory, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, riid, ppvAdapter);
 	}
 
 	inline bool __cdecl IsNVIDIAAdapter(_In_ IDXGIAdapter* adapter) {
-		return __internal::is_adapter(adapter, 0x10DE);
+		return _internal::is_adapter(adapter, 0x10DE);
 	}
 
 	inline bool __cdecl IsAMDAdapter(_In_ IDXGIAdapter* adapter) {
-		return __internal::is_adapter(adapter, 0x1002);
+		return _internal::is_adapter(adapter, 0x1002);
 	}
 
 	inline bool __cdecl IsIntelAdapter(_In_ IDXGIAdapter* adapter) {
-		return __internal::is_adapter(adapter, 0x8086);
+		return _internal::is_adapter(adapter, 0x8086);
 	}
 
 	inline bool __cdecl IsWarpAdapter(_In_ IDXGIAdapter* adapter) {
-		return __internal::is_adapter(adapter, 0x1414);
+		return _internal::is_adapter(adapter, 0x1414);
 	}
 
 	inline HRESULT __cdecl CreateDirectCommandQueue(_In_ ID3D12Device* device, REFIID riid, _COM_Outptr_ void** ppCommandQueue) {
-		return __internal::createCommandQueue(device, D3D12_COMMAND_LIST_TYPE_DIRECT, riid, ppCommandQueue);
+		return _internal::createCommandQueue(device, D3D12_COMMAND_LIST_TYPE_DIRECT, riid, ppCommandQueue);
 	}
 
 	inline HRESULT __cdecl CreateCopyCommandQueue(_In_ ID3D12Device* device, REFIID riid, _COM_Outptr_ void** ppCommandQueue) {
-		return __internal::createCommandQueue(device, D3D12_COMMAND_LIST_TYPE_COPY, riid, ppCommandQueue);
+		return _internal::createCommandQueue(device, D3D12_COMMAND_LIST_TYPE_COPY, riid, ppCommandQueue);
 	}
 
 	inline HRESULT __cdecl CreateComputeCommandQueue(_In_ ID3D12Device* device, REFIID riid, _COM_Outptr_ void** ppCommandQueue) {
-		return __internal::createCommandQueue(device, D3D12_COMMAND_LIST_TYPE_COMPUTE, riid, ppCommandQueue);
+		return _internal::createCommandQueue(device, D3D12_COMMAND_LIST_TYPE_COMPUTE, riid, ppCommandQueue);
 	}
 
 	inline HRESULT __cdecl CreateDirectCommandAllocator(_In_ ID3D12Device* device, REFIID riid, _COM_Outptr_ void** ppCommandAllocator) {
-		return __internal::createCommandAllocator(device, D3D12_COMMAND_LIST_TYPE_DIRECT, riid, ppCommandAllocator);
+		return _internal::createCommandAllocator(device, D3D12_COMMAND_LIST_TYPE_DIRECT, riid, ppCommandAllocator);
 	}
 
 	inline HRESULT __cdecl CreateCopyCommandAllocator(_In_ ID3D12Device* device, REFIID riid, _COM_Outptr_ void** ppCommandAllocator) {
-		return __internal::createCommandAllocator(device, D3D12_COMMAND_LIST_TYPE_COPY, riid, ppCommandAllocator);
+		return _internal::createCommandAllocator(device, D3D12_COMMAND_LIST_TYPE_COPY, riid, ppCommandAllocator);
 	}
 
 	inline HRESULT __cdecl CreateComputeCommandAllocator(_In_ ID3D12Device* device, REFIID riid, _COM_Outptr_ void** ppCommandAllocator) {
-		return __internal::createCommandAllocator(device, D3D12_COMMAND_LIST_TYPE_COMPUTE, riid, ppCommandAllocator);
+		return _internal::createCommandAllocator(device, D3D12_COMMAND_LIST_TYPE_COMPUTE, riid, ppCommandAllocator);
 	}
 
 	inline bool __cdecl IsDirectXRaytracingSupported(_In_ ID3D12Device* device) {
@@ -205,15 +182,16 @@ namespace EasyDX12 {
 		if (FAILED(hr))
 			return hr;
 		if (myFence->GetCompletedValue() != 1) {
-			__internal::ScopedHandle m_fenceEvent(__internal::safe_handle(CreateEvent(nullptr, FALSE, FALSE, nullptr)));
-			if (m_fenceEvent.get() == nullptr) {
+			Microsoft::WRL::Wrappers::Event m_fenceEvent;
+			m_fenceEvent.Attach(CreateEvent(nullptr, FALSE, FALSE, nullptr));
+			if (!m_fenceEvent.IsValid()) {
 				return HRESULT_FROM_WIN32(GetLastError());
 			}
-			hr = myFence->SetEventOnCompletion(1, m_fenceEvent.get());
+			hr = myFence->SetEventOnCompletion(1, m_fenceEvent.Get());
 			if (FAILED(hr)) {
 				return hr;
 			}
-			if (WaitForSingleObject(m_fenceEvent.get(), INFINITE) == WAIT_FAILED) {
+			if (WaitForSingleObject(m_fenceEvent.Get(), INFINITE) == WAIT_FAILED) {
 				return HRESULT_FROM_WIN32(GetLastError());
 			}
 		}
@@ -286,7 +264,10 @@ namespace EasyDX12 {
 		hr = uploadBuffer->Map(0, nullptr, reinterpret_cast<void**>(&pVertexDataBegin));
 		if (FAILED(hr))
 			return hr;
-		__internal::memcpy_u64(pVertexDataBegin, data, count);
+		const UINT8* myData = reinterpret_cast<const UINT8*>(data);
+		for (UINT64 i = 0;i < count; ++i) {
+			pVertexDataBegin[i] = myData[i];
+		}
 		uploadBuffer->Unmap(0, nullptr);
 
 		D3D12_RESOURCE_BARRIER barrier = {};
