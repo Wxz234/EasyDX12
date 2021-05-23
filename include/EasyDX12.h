@@ -198,16 +198,89 @@ namespace EasyDX12 {
 		return S_OK;
 	}
 
-	inline HRESULT __cdecl CreateConstantBuffer(
+	inline HRESULT __cdecl CreateUploadBufferResource(
 		_In_ ID3D12Device* device,
 		_In_reads_bytes_(count) const void* data,
 		UINT64 count,
-		_COM_Outptr_ ID3D12Resource** ppvResource) {
+		REFIID riid,
+		_COM_Outptr_ void** ppvResource) {
 		if (!ppvResource)
 			return E_INVALIDARG;
 		*ppvResource = nullptr;
 		if (!device || !data || (count == 0))
 			return E_INVALIDARG;
+		if (riid != IID_ID3D12Resource && riid != IID_ID3D12Resource1 && riid != IID_ID3D12Resource2) {
+			return E_NOINTERFACE;
+		}
+		D3D12_HEAP_PROPERTIES prop = {};
+		prop.Type = D3D12_HEAP_TYPE_UPLOAD;
+		prop.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+		prop.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+		prop.CreationNodeMask = 1;
+		prop.VisibleNodeMask = 1;
+		D3D12_RESOURCE_DESC desc = {};
+		desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+		desc.Alignment = 0;
+		desc.Width = count;
+		desc.Height = 1;
+		desc.DepthOrArraySize = 1;
+		desc.MipLevels = 1;
+		desc.Format = DXGI_FORMAT_UNKNOWN;
+		desc.SampleDesc.Count = 1;
+		desc.SampleDesc.Quality = 0;
+		desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+		desc.Flags = D3D12_RESOURCE_FLAG_NONE;
+		Microsoft::WRL::ComPtr<ID3D12Resource> uploadBuffer;
+		HRESULT hr = device->CreateCommittedResource(
+			&prop,
+			D3D12_HEAP_FLAG_NONE,
+			&desc,
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS(&uploadBuffer));
+
+		if (FAILED(hr))
+			return hr;
+
+		UINT8* pVertexDataBegin;
+		hr = uploadBuffer->Map(0, nullptr, reinterpret_cast<void**>(&pVertexDataBegin));
+		if (FAILED(hr))
+			return hr;
+		const UINT8* myData = reinterpret_cast<const UINT8*>(data);
+		for (UINT64 i = 0; i < count; ++i) {
+			pVertexDataBegin[i] = myData[i];
+		}
+		uploadBuffer->Unmap(0, nullptr);
+		if (riid == IID_ID3D12Resource1) {
+			Microsoft::WRL::ComPtr<ID3D12Resource1> myRes;
+			hr = uploadBuffer.As(&myRes);
+			if (FAILED(hr))
+				return hr;
+		}
+		else {
+			Microsoft::WRL::ComPtr<ID3D12Resource2> myRes;
+			hr = uploadBuffer.As(&myRes);
+			if (FAILED(hr))
+				return hr;
+		}
+		*ppvResource = uploadBuffer.Detach();
+		return S_OK;
+	}
+
+	inline HRESULT __cdecl CreateDefaultBufferResource(
+		_In_ ID3D12Device* device,
+		_In_reads_bytes_(count) const void* data,
+		UINT64 count,
+		REFIID riid,
+		_COM_Outptr_ void** ppvResource) {
+		if (!ppvResource)
+			return E_INVALIDARG;
+		*ppvResource = nullptr;
+		if (!device || !data || (count == 0))
+			return E_INVALIDARG;
+		if (riid != IID_ID3D12Resource && riid != IID_ID3D12Resource1 && riid != IID_ID3D12Resource2) {
+			return E_NOINTERFACE;
+		}
 
 		Microsoft::WRL::ComPtr<ID3D12CommandQueue> myQueue;
 		HRESULT hr = CreateCopyCommandQueue(device, IID_PPV_ARGS(&myQueue));
@@ -265,7 +338,7 @@ namespace EasyDX12 {
 		if (FAILED(hr))
 			return hr;
 		const UINT8* myData = reinterpret_cast<const UINT8*>(data);
-		for (UINT64 i = 0;i < count; ++i) {
+		for (UINT64 i = 0; i < count; ++i) {
 			pVertexDataBegin[i] = myData[i];
 		}
 		uploadBuffer->Unmap(0, nullptr);
@@ -290,6 +363,17 @@ namespace EasyDX12 {
 		hr = FlushCommandQueue(myQueue.Get());
 		if (FAILED(hr))
 			return hr;
+		if(riid == IID_ID3D12Resource1) {
+			Microsoft::WRL::ComPtr<ID3D12Resource1> myRes;
+			hr = defaultBuffer.As(&myRes);
+			if (FAILED(hr))
+				return hr;
+		}else{
+			Microsoft::WRL::ComPtr<ID3D12Resource2> myRes;
+			hr = defaultBuffer.As(&myRes);
+			if (FAILED(hr))
+				return hr;
+		}
 		*ppvResource = defaultBuffer.Detach();
 		return S_OK;
 	}
