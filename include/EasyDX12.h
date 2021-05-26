@@ -51,7 +51,6 @@ namespace EasyDX12 {
 				return E_INVALIDARG;
 			return device->CreateCommandAllocator(type, riid, ppCommandAllocator);
 		}
-
 	}
 	inline HRESULT __cdecl GetWarpAdapter(_In_ IDXGIFactory* factory, REFIID riid, _COM_Outptr_ void** ppvAdapter) {
 		if (!ppvAdapter)
@@ -376,5 +375,12 @@ namespace EasyDX12 {
 		}
 		*ppvResource = defaultBuffer.Detach();
 		return S_OK;
+	}
+
+	namespace UI {
+		inline HRESULT __cdecl Begin() noexcept {
+			return S_OK;
+		}
+		inline void __cdecl End() noexcept {}
 	}
 }
