@@ -52,6 +52,31 @@ namespace EasyDX12 {
 			return device->CreateCommandAllocator(type, riid, ppCommandAllocator);
 		}
 	}
+
+	inline HRESULT __cdecl CreateDefaultDevice(REFIID riid, _COM_Outptr_ void** ppDevice) {
+		return D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, riid, ppDevice);
+	}
+
+	inline HRESULT __cdecl CreateDefaultFence(
+		_In_ ID3D12Device* device, 
+		UINT64 InitialValue,
+		REFIID riid, 
+		_COM_Outptr_ void** ppFence) {
+		if (!device)
+			return E_INVALIDARG;
+		return device->CreateFence(InitialValue, D3D12_FENCE_FLAG_NONE, riid, ppFence);
+	}
+
+	inline HRESULT __cdecl EnableDebugLayer() {
+		Microsoft::WRL::ComPtr<ID3D12Debug> debugController;
+		HRESULT hr = D3D12GetDebugInterface(IID_PPV_ARGS(&debugController));
+		if (FAILED(hr)) {
+			return hr;
+		}
+		debugController->EnableDebugLayer();
+		return S_OK;
+	}
+
 	inline HRESULT __cdecl GetWarpAdapter(_In_ IDXGIFactory* factory, REFIID riid, _COM_Outptr_ void** ppvAdapter) {
 		if (!ppvAdapter)
 			return E_INVALIDARG;
@@ -94,27 +119,27 @@ namespace EasyDX12 {
 		return _internal::is_adapter(adapter, 0x1414);
 	}
 
-	inline HRESULT __cdecl CreateDirectCommandQueue(_In_ ID3D12Device* device, REFIID riid, _COM_Outptr_ void** ppCommandQueue) {
+	inline HRESULT __cdecl CreateDefaultDirectCommandQueue(_In_ ID3D12Device* device, REFIID riid, _COM_Outptr_ void** ppCommandQueue) {
 		return _internal::createCommandQueue(device, D3D12_COMMAND_LIST_TYPE_DIRECT, riid, ppCommandQueue);
 	}
 
-	inline HRESULT __cdecl CreateCopyCommandQueue(_In_ ID3D12Device* device, REFIID riid, _COM_Outptr_ void** ppCommandQueue) {
+	inline HRESULT __cdecl CreateDefaultCopyCommandQueue(_In_ ID3D12Device* device, REFIID riid, _COM_Outptr_ void** ppCommandQueue) {
 		return _internal::createCommandQueue(device, D3D12_COMMAND_LIST_TYPE_COPY, riid, ppCommandQueue);
 	}
 
-	inline HRESULT __cdecl CreateComputeCommandQueue(_In_ ID3D12Device* device, REFIID riid, _COM_Outptr_ void** ppCommandQueue) {
+	inline HRESULT __cdecl CreateDefaultComputeCommandQueue(_In_ ID3D12Device* device, REFIID riid, _COM_Outptr_ void** ppCommandQueue) {
 		return _internal::createCommandQueue(device, D3D12_COMMAND_LIST_TYPE_COMPUTE, riid, ppCommandQueue);
 	}
 
-	inline HRESULT __cdecl CreateDirectCommandAllocator(_In_ ID3D12Device* device, REFIID riid, _COM_Outptr_ void** ppCommandAllocator) {
+	inline HRESULT __cdecl CreateDefaultDirectCommandAllocator(_In_ ID3D12Device* device, REFIID riid, _COM_Outptr_ void** ppCommandAllocator) {
 		return _internal::createCommandAllocator(device, D3D12_COMMAND_LIST_TYPE_DIRECT, riid, ppCommandAllocator);
 	}
 
-	inline HRESULT __cdecl CreateCopyCommandAllocator(_In_ ID3D12Device* device, REFIID riid, _COM_Outptr_ void** ppCommandAllocator) {
+	inline HRESULT __cdecl CreateDefaultCopyCommandAllocator(_In_ ID3D12Device* device, REFIID riid, _COM_Outptr_ void** ppCommandAllocator) {
 		return _internal::createCommandAllocator(device, D3D12_COMMAND_LIST_TYPE_COPY, riid, ppCommandAllocator);
 	}
 
-	inline HRESULT __cdecl CreateComputeCommandAllocator(_In_ ID3D12Device* device, REFIID riid, _COM_Outptr_ void** ppCommandAllocator) {
+	inline HRESULT __cdecl CreateDefaultComputeCommandAllocator(_In_ ID3D12Device* device, REFIID riid, _COM_Outptr_ void** ppCommandAllocator) {
 		return _internal::createCommandAllocator(device, D3D12_COMMAND_LIST_TYPE_COMPUTE, riid, ppCommandAllocator);
 	}
 
@@ -197,7 +222,7 @@ namespace EasyDX12 {
 		return S_OK;
 	}
 
-	inline HRESULT __cdecl CreateUploadBufferResource(
+	inline HRESULT __cdecl CreateUploadHeapBufferResource(
 		_In_ ID3D12Device* device,
 		_In_reads_bytes_(count) const void* data,
 		UINT64 count,
@@ -266,7 +291,7 @@ namespace EasyDX12 {
 		return S_OK;
 	}
 
-	inline HRESULT __cdecl CreateDefaultBufferResource(
+	inline HRESULT __cdecl CreateDefaultHeapBufferResource(
 		_In_ ID3D12Device* device,
 		_In_reads_bytes_(count) const void* data,
 		UINT64 count,
@@ -282,11 +307,11 @@ namespace EasyDX12 {
 		}
 
 		Microsoft::WRL::ComPtr<ID3D12CommandQueue> myQueue;
-		HRESULT hr = CreateCopyCommandQueue(device, IID_PPV_ARGS(&myQueue));
+		HRESULT hr = CreateDefaultCopyCommandQueue(device, IID_PPV_ARGS(&myQueue));
 		if (FAILED(hr))
 			return hr;
 		Microsoft::WRL::ComPtr<ID3D12CommandAllocator> myAllocator;
-		hr = CreateCopyCommandAllocator(device, IID_PPV_ARGS(&myAllocator));
+		hr = CreateDefaultCopyCommandAllocator(device, IID_PPV_ARGS(&myAllocator));
 		if (FAILED(hr))
 			return hr;
 		Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> myList;
@@ -362,12 +387,13 @@ namespace EasyDX12 {
 		hr = FlushCommandQueue(myQueue.Get());
 		if (FAILED(hr))
 			return hr;
-		if(riid == IID_ID3D12Resource1) {
+		if (riid == IID_ID3D12Resource1) {
 			Microsoft::WRL::ComPtr<ID3D12Resource1> myRes;
 			hr = defaultBuffer.As(&myRes);
 			if (FAILED(hr))
 				return hr;
-		}else{
+		}
+		else {
 			Microsoft::WRL::ComPtr<ID3D12Resource2> myRes;
 			hr = defaultBuffer.As(&myRes);
 			if (FAILED(hr))
@@ -376,6 +402,7 @@ namespace EasyDX12 {
 		*ppvResource = defaultBuffer.Detach();
 		return S_OK;
 	}
+
 
 	namespace UI {
 		inline HRESULT __cdecl Begin() noexcept {
