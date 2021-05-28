@@ -5,6 +5,7 @@
 #include <dxgi1_6.h>
 #include <wrl/client.h>
 #include <wrl/wrappers/corewrappers.h>
+
 namespace EasyDX12 {
 	namespace _internal {
 		inline HRESULT __cdecl getAdapter(_In_ IDXGIFactory* factory, DXGI_GPU_PREFERENCE preference, REFIID riid, _COM_Outptr_ void** ppvAdapter) {
