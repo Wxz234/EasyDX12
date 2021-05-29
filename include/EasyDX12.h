@@ -1,6 +1,7 @@
 #pragma once
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
+#pragma comment(lib,"dxguid.lib")
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <wrl/client.h>
@@ -52,6 +53,25 @@ namespace EasyDX12 {
 				return E_INVALIDARG;
 			return device->CreateCommandAllocator(type, riid, ppCommandAllocator);
 		}
+		
+		inline HRESULT __cdecl createDescriptorHeaps(
+			_In_ ID3D12Device* device, 
+			UINT NumDescriptors, 
+			D3D12_DESCRIPTOR_HEAP_TYPE type, 
+			REFIID riid,
+			_COM_Outptr_  void** ppvHeap) {
+			if (!ppvHeap)
+				return E_INVALIDARG;
+			*ppvHeap = nullptr;
+			if (!device)
+				return E_INVALIDARG;
+			D3D12_DESCRIPTOR_HEAP_DESC HeapDesc = {};
+			HeapDesc.NumDescriptors = NumDescriptors;
+			HeapDesc.Type = type;
+			HeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+			HeapDesc.NodeMask = 0;
+			return device->CreateDescriptorHeap(&HeapDesc, riid, ppvHeap);
+		}
 	}
 
 	inline HRESULT __cdecl CreateDefaultDevice(REFIID riid, _COM_Outptr_ void** ppDevice) {
@@ -77,6 +97,31 @@ namespace EasyDX12 {
 		debugController->EnableDebugLayer();
 		return S_OK;
 	}
+	
+	inline HRESULT __cdecl CreateRTVDescriptorHeap(_In_ ID3D12Device* device, UINT NumDescriptors, REFIID riid, _COM_Outptr_  void** ppvHeap) {
+		return _internal::createDescriptorHeaps(device, NumDescriptors, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, riid, ppvHeap);
+	}
+
+	inline HRESULT __cdecl CreateCBVDescriptorHeap(_In_ ID3D12Device* device, UINT NumDescriptors, REFIID riid, _COM_Outptr_  void** ppvHeap) {
+		return _internal::createDescriptorHeaps(device, NumDescriptors, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, riid, ppvHeap);
+	}
+
+	inline HRESULT __cdecl CreateSRVDescriptorHeap(_In_ ID3D12Device* device, UINT NumDescriptors, REFIID riid, _COM_Outptr_  void** ppvHeap) {
+		return _internal::createDescriptorHeaps(device, NumDescriptors, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, riid, ppvHeap);
+	}
+
+	inline HRESULT __cdecl CreateUAVDescriptorHeap(_In_ ID3D12Device* device, UINT NumDescriptors, REFIID riid, _COM_Outptr_  void** ppvHeap) {
+		return _internal::createDescriptorHeaps(device, NumDescriptors, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, riid, ppvHeap);
+	}
+
+	inline HRESULT __cdecl CreateDSVDescriptorHeap(_In_ ID3D12Device* device, UINT NumDescriptors, REFIID riid, _COM_Outptr_  void** ppvHeap) {
+		return _internal::createDescriptorHeaps(device, NumDescriptors, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, riid, ppvHeap);
+	}
+
+	inline HRESULT __cdecl CreateSamplerDescriptorHeap(_In_ ID3D12Device* device, UINT NumDescriptors, REFIID riid, _COM_Outptr_  void** ppvHeap) {
+		return _internal::createDescriptorHeaps(device, NumDescriptors, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, riid, ppvHeap);
+	}
+
 
 	inline HRESULT __cdecl GetWarpAdapter(_In_ IDXGIFactory* factory, REFIID riid, _COM_Outptr_ void** ppvAdapter) {
 		if (!ppvAdapter)
