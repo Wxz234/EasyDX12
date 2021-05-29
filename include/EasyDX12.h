@@ -352,8 +352,6 @@ namespace EasyDX12 {
 			return E_NOINTERFACE;
 		}
 
-		Microsoft::WRL::ComPtr<ID3D12CommandQueue> myQueue;
-
 		Microsoft::WRL::ComPtr<ID3D12Resource> defaultBuffer;
 		D3D12_HEAP_PROPERTIES prop = {};
 		prop.Type = D3D12_HEAP_TYPE_DEFAULT;
@@ -410,7 +408,8 @@ namespace EasyDX12 {
 		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COMMON;
 		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
 		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-		HRESULT hr = CreateDefaultCopyCommandQueue(device, IID_PPV_ARGS(&myQueue));
+		Microsoft::WRL::ComPtr<ID3D12CommandQueue> myQueue;
+		hr = CreateDefaultCopyCommandQueue(device, IID_PPV_ARGS(&myQueue));
 		if (FAILED(hr))
 			return hr;
 		Microsoft::WRL::ComPtr<ID3D12CommandAllocator> myAllocator;
@@ -458,4 +457,3 @@ namespace EasyDX12 {
 		inline void __cdecl End() noexcept {}
 	}
 }
-
