@@ -327,7 +327,7 @@ namespace EasyDX12 {
 			if (FAILED(hr))
 				return hr;
 		}
-		else {
+		else if (riid == IID_ID3D12Resource2){
 			Microsoft::WRL::ComPtr<ID3D12Resource2> myRes;
 			hr = uploadBuffer.As(&myRes);
 			if (FAILED(hr))
@@ -439,7 +439,7 @@ namespace EasyDX12 {
 			if (FAILED(hr))
 				return hr;
 		}
-		else {
+		else if(riid == IID_ID3D12Resource2){
 			Microsoft::WRL::ComPtr<ID3D12Resource2> myRes;
 			hr = defaultBuffer.As(&myRes);
 			if (FAILED(hr))
