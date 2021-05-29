@@ -53,11 +53,11 @@ namespace EasyDX12 {
 				return E_INVALIDARG;
 			return device->CreateCommandAllocator(type, riid, ppCommandAllocator);
 		}
-		
+
 		inline HRESULT __cdecl createDescriptorHeaps(
-			_In_ ID3D12Device* device, 
-			UINT NumDescriptors, 
-			D3D12_DESCRIPTOR_HEAP_TYPE type, 
+			_In_ ID3D12Device* device,
+			UINT NumDescriptors,
+			D3D12_DESCRIPTOR_HEAP_TYPE type,
 			REFIID riid,
 			_COM_Outptr_  void** ppvHeap) {
 			if (!ppvHeap)
@@ -79,9 +79,9 @@ namespace EasyDX12 {
 	}
 
 	inline HRESULT __cdecl CreateDefaultFence(
-		_In_ ID3D12Device* device, 
+		_In_ ID3D12Device* device,
 		UINT64 InitialValue,
-		REFIID riid, 
+		REFIID riid,
 		_COM_Outptr_ void** ppFence) {
 		if (!device)
 			return E_INVALIDARG;
@@ -97,7 +97,7 @@ namespace EasyDX12 {
 		debugController->EnableDebugLayer();
 		return S_OK;
 	}
-	
+
 	inline HRESULT __cdecl CreateRTVDescriptorHeap(_In_ ID3D12Device* device, UINT NumDescriptors, REFIID riid, _COM_Outptr_  void** ppvHeap) {
 		return _internal::createDescriptorHeaps(device, NumDescriptors, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, riid, ppvHeap);
 	}
@@ -353,17 +353,7 @@ namespace EasyDX12 {
 		}
 
 		Microsoft::WRL::ComPtr<ID3D12CommandQueue> myQueue;
-		HRESULT hr = CreateDefaultCopyCommandQueue(device, IID_PPV_ARGS(&myQueue));
-		if (FAILED(hr))
-			return hr;
-		Microsoft::WRL::ComPtr<ID3D12CommandAllocator> myAllocator;
-		hr = CreateDefaultCopyCommandAllocator(device, IID_PPV_ARGS(&myAllocator));
-		if (FAILED(hr))
-			return hr;
-		Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> myList;
-		hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COPY, myAllocator.Get(), nullptr, IID_PPV_ARGS(&myList));
-		if (FAILED(hr))
-			return hr;
+
 		Microsoft::WRL::ComPtr<ID3D12Resource> defaultBuffer;
 		D3D12_HEAP_PROPERTIES prop = {};
 		prop.Type = D3D12_HEAP_TYPE_DEFAULT;
@@ -383,7 +373,7 @@ namespace EasyDX12 {
 		desc.SampleDesc.Quality = 0;
 		desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 		desc.Flags = D3D12_RESOURCE_FLAG_NONE;
-		hr = device->CreateCommittedResource(
+		HRESULT hr = device->CreateCommittedResource(
 			&prop,
 			D3D12_HEAP_FLAG_NONE,
 			&desc,
@@ -420,6 +410,17 @@ namespace EasyDX12 {
 		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COMMON;
 		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
 		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		HRESULT hr = CreateDefaultCopyCommandQueue(device, IID_PPV_ARGS(&myQueue));
+		if (FAILED(hr))
+			return hr;
+		Microsoft::WRL::ComPtr<ID3D12CommandAllocator> myAllocator;
+		hr = CreateDefaultCopyCommandAllocator(device, IID_PPV_ARGS(&myAllocator));
+		if (FAILED(hr))
+			return hr;
+		Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> myList;
+		hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COPY, myAllocator.Get(), nullptr, IID_PPV_ARGS(&myList));
+		if (FAILED(hr))
+			return hr;
 		myList->ResourceBarrier(1, &barrier);
 		myList->CopyBufferRegion(defaultBuffer.Get(), 0, uploadBuffer.Get(), 0, count);
 		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
@@ -457,3 +458,4 @@ namespace EasyDX12 {
 		inline void __cdecl End() noexcept {}
 	}
 }
+
