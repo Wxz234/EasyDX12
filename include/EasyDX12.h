@@ -72,6 +72,7 @@ namespace EasyDX12 {
 			HeapDesc.NodeMask = 0;
 			return device->CreateDescriptorHeap(&HeapDesc, riid, ppvHeap);
 		}
+
 	}
 
 	inline HRESULT __cdecl CreateDefaultDevice(REFIID riid, _COM_Outptr_ void** ppDevice) {
@@ -86,6 +87,10 @@ namespace EasyDX12 {
 		if (!device)
 			return E_INVALIDARG;
 		return device->CreateFence(InitialValue, D3D12_FENCE_FLAG_NONE, riid, ppFence);
+	}
+
+	inline HRESULT __cdecl CreateDefaultFactory(REFIID riid, _COM_Outptr_ void** ppFactory) {
+		return CreateDXGIFactory2(0, riid, ppFactory);
 	}
 
 	inline HRESULT __cdecl EnableDebugLayer() {
@@ -327,7 +332,7 @@ namespace EasyDX12 {
 			if (FAILED(hr))
 				return hr;
 		}
-		else if (riid == IID_ID3D12Resource2){
+		else if (riid == IID_ID3D12Resource2) {
 			Microsoft::WRL::ComPtr<ID3D12Resource2> myRes;
 			hr = uploadBuffer.As(&myRes);
 			if (FAILED(hr))
@@ -336,6 +341,7 @@ namespace EasyDX12 {
 		*ppvResource = uploadBuffer.Detach();
 		return S_OK;
 	}
+
 
 	namespace UI {
 		inline HRESULT __cdecl Begin() noexcept {
