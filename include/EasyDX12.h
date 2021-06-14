@@ -277,16 +277,12 @@ namespace EasyDX12 {
 		_In_ ID3D12Device* device,
 		_In_reads_bytes_(count) const void* data,
 		UINT64 count,
-		REFIID riid,
-		_COM_Outptr_ void** ppvResource) {
+		_COM_Outptr_ ID3D12Resource** ppvResource) {
 		if (!ppvResource)
 			return E_INVALIDARG;
 		*ppvResource = nullptr;
-		if (!device || !data || (count == 0))
+		if (!device || !data || !count)
 			return E_INVALIDARG;
-		if (riid != IID_ID3D12Resource && riid != IID_ID3D12Resource1 && riid != IID_ID3D12Resource2) {
-			return E_NOINTERFACE;
-		}
 		D3D12_HEAP_PROPERTIES prop = {};
 		prop.Type = D3D12_HEAP_TYPE_UPLOAD;
 		prop.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
@@ -308,15 +304,13 @@ namespace EasyDX12 {
 		Microsoft::WRL::ComPtr<ID3D12Resource> uploadBuffer;
 		HRESULT hr = device->CreateCommittedResource(
 			&prop,
-			D3D12_HEAP_FLAG_NONE,
+			D3D12_HEAP_FLAG_ALLOW_ALL_BUFFERS_AND_TEXTURES,
 			&desc,
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr,
 			IID_PPV_ARGS(&uploadBuffer));
-
 		if (FAILED(hr))
 			return hr;
-
 		UINT8* pVertexDataBegin;
 		hr = uploadBuffer->Map(0, nullptr, reinterpret_cast<void**>(&pVertexDataBegin));
 		if (FAILED(hr))
@@ -326,27 +320,28 @@ namespace EasyDX12 {
 			pVertexDataBegin[i] = myData[i];
 		}
 		uploadBuffer->Unmap(0, nullptr);
-		if (riid == IID_ID3D12Resource1) {
-			Microsoft::WRL::ComPtr<ID3D12Resource1> myRes;
-			hr = uploadBuffer.As(&myRes);
-			if (FAILED(hr))
-				return hr;
-		}
-		else if (riid == IID_ID3D12Resource2) {
-			Microsoft::WRL::ComPtr<ID3D12Resource2> myRes;
-			hr = uploadBuffer.As(&myRes);
-			if (FAILED(hr))
-				return hr;
-		}
 		*ppvResource = uploadBuffer.Detach();
 		return S_OK;
 	}
 
-
-	namespace UI {
-		inline HRESULT __cdecl Begin() noexcept {
-			return S_OK;
-		}
-		inline void __cdecl End() noexcept {}
-	}
+	//inline HRESULT __cdecl CreateRenderTargetViewFromSwapChain(
+	//	_In_ ID3D12Device* device,
+	//	_In_ IDXGISwapChain *swapchain,
+	//	REFIID riid, 
+	//	_COM_Outptr_ void** ppvHeap) {
+	//	if (!ppvHeap)
+	//		return E_INVALIDARG;
+	//	*ppvHeap = nullptr;
+	//	if (!device || !swapchain)
+	//		return E_INVALIDARG;
+	//	DXGI_SWAP_CHAIN_DESC desc = {};
+	//	HRESULT hr = swapchain->GetDesc(&desc);
+	//	if (FAILED(hr))
+	//		return hr;
+	//	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> heap;
+	//	hr = CreateRTVDescriptorHeap(device, desc.BufferCount, IID_PPV_ARGS(&heap));
+	//	if (FAILED(hr))
+	//		return hr;
+	//	return S_OK;
+	//}
 }
