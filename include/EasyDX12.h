@@ -324,24 +324,27 @@ namespace EasyDX12 {
 		return S_OK;
 	}
 
-	//inline HRESULT __cdecl CreateRenderTargetViewFromSwapChain(
-	//	_In_ ID3D12Device* device,
-	//	_In_ IDXGISwapChain *swapchain,
-	//	REFIID riid, 
-	//	_COM_Outptr_ void** ppvHeap) {
-	//	if (!ppvHeap)
-	//		return E_INVALIDARG;
-	//	*ppvHeap = nullptr;
-	//	if (!device || !swapchain)
-	//		return E_INVALIDARG;
-	//	DXGI_SWAP_CHAIN_DESC desc = {};
-	//	HRESULT hr = swapchain->GetDesc(&desc);
-	//	if (FAILED(hr))
-	//		return hr;
-	//	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> heap;
-	//	hr = CreateRTVDescriptorHeap(device, desc.BufferCount, IID_PPV_ARGS(&heap));
-	//	if (FAILED(hr))
-	//		return hr;
-	//	return S_OK;
-	//}
+	inline HRESULT __cdecl CreateRenderTargetView(
+		_In_ ID3D12Device* device,
+		_In_ ID3D12Resource* resource,
+		REFIID riid,
+		_COM_Outptr_ void** ppvHeap) {
+		if (!ppvHeap) {
+			return E_INVALIDARG;
+		}
+		*ppvHeap = nullptr;
+		if (!device || !resource)
+			return E_INVALIDARG;
+		if (riid != IID_ID3D12DescriptorHeap) {
+			return E_NOINTERFACE;
+		}
+		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> myHeap;
+		HRESULT hr = CreateRTVDescriptorHeap(device, 1, IID_PPV_ARGS(&myHeap));
+		if (FAILED(hr))
+			return hr;
+		device->CreateRenderTargetView(resource, nullptr, myHeap->GetCPUDescriptorHandleForHeapStart());
+		*ppvHeap = myHeap.Detach();
+		return S_OK;
+	}
+
 }
