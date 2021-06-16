@@ -242,6 +242,24 @@ namespace EasyDX12 {
 		return true;
 	}
 
+	inline HRESULT __cdecl FlushCommandQueue(_In_ ID3D12CommandQueue* queue,_In_ ID3D12Fence* fence,UINT64 value) {
+		if (!queue || !fence)
+			return E_INVALIDARG;
+
+		HRESULT hr = queue->Signal(fence, value);
+		if (FAILED(hr))
+			return hr;
+		Microsoft::WRL::Wrappers::Event m_fenceEvent;
+		m_fenceEvent.Attach(CreateEvent(nullptr, FALSE, FALSE, nullptr));
+		hr = fence->SetEventOnCompletion(value, m_fenceEvent.Get());
+		if (FAILED(hr))
+			return hr;
+		if (WaitForSingleObject(m_fenceEvent.Get(), INFINITE) == WAIT_FAILED) {
+			return HRESULT_FROM_WIN32(GetLastError());
+		}
+		return S_OK;
+	}
+
 	inline HRESULT __cdecl FlushCommandQueue(_In_ ID3D12CommandQueue* queue) {
 		if (!queue)
 			return E_INVALIDARG;
@@ -253,24 +271,7 @@ namespace EasyDX12 {
 		hr = myDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&myFence));
 		if (FAILED(hr))
 			return hr;
-		hr = queue->Signal(myFence.Get(), 1);
-		if (FAILED(hr))
-			return hr;
-		if (myFence->GetCompletedValue() != 1) {
-			Microsoft::WRL::Wrappers::Event m_fenceEvent;
-			m_fenceEvent.Attach(CreateEvent(nullptr, FALSE, FALSE, nullptr));
-			if (!m_fenceEvent.IsValid()) {
-				return HRESULT_FROM_WIN32(GetLastError());
-			}
-			hr = myFence->SetEventOnCompletion(1, m_fenceEvent.Get());
-			if (FAILED(hr)) {
-				return hr;
-			}
-			if (WaitForSingleObject(m_fenceEvent.Get(), INFINITE) == WAIT_FAILED) {
-				return HRESULT_FROM_WIN32(GetLastError());
-			}
-		}
-		return S_OK;
+		return FlushCommandQueue(queue, myFence.Get(), 1);
 	}
 
 	inline HRESULT __cdecl CreateUploadHeapBufferResource(
@@ -347,4 +348,8 @@ namespace EasyDX12 {
 		return S_OK;
 	}
 
+
+	//inline HRESULT __cdecl Present(_In_ IDXGISwapChain* swapchain,_In_ ID3D12CommandQueue* queue){
+	//	return S_OK;
+	//}
 }
