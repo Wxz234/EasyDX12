@@ -72,7 +72,7 @@ namespace EasyDX12 {
 			HeapDesc.NodeMask = 0;
 			return device->CreateDescriptorHeap(&HeapDesc, riid, ppvHeap);
 		}
-
+		
 	}
 
 	inline HRESULT __cdecl CreateDefaultDevice(REFIID riid, _COM_Outptr_ void** ppDevice) {
@@ -242,10 +242,9 @@ namespace EasyDX12 {
 		return true;
 	}
 
-	inline HRESULT __cdecl FlushCommandQueue(_In_ ID3D12CommandQueue* queue,_In_ ID3D12Fence* fence,UINT64 value) {
+	inline HRESULT __cdecl FlushCommandQueue(_In_ ID3D12CommandQueue* queue, _In_ ID3D12Fence* fence, UINT64 value) {
 		if (!queue || !fence)
 			return E_INVALIDARG;
-
 		HRESULT hr = queue->Signal(fence, value);
 		if (FAILED(hr))
 			return hr;
@@ -348,8 +347,4 @@ namespace EasyDX12 {
 		return S_OK;
 	}
 
-
-	//inline HRESULT __cdecl Present(_In_ IDXGISwapChain* swapchain,_In_ ID3D12CommandQueue* queue){
-	//	return S_OK;
-	//}
 }
