@@ -72,7 +72,7 @@ namespace EasyDX12 {
 			HeapDesc.NodeMask = 0;
 			return device->CreateDescriptorHeap(&HeapDesc, riid, ppvHeap);
 		}
-		
+
 	}
 
 	inline HRESULT __cdecl CreateDefaultDevice(REFIID riid, _COM_Outptr_ void** ppDevice) {
@@ -347,4 +347,21 @@ namespace EasyDX12 {
 		return S_OK;
 	}
 
+	inline HRESULT __cdecl D3D12Log(
+		_In_ ID3D12Device* device,
+		_In_ D3D12_MESSAGE_SEVERITY Severity,
+		_In_ LPCSTR pDescription
+	) {
+		if (!device)
+			return E_INVALIDARG;
+		ID3D12InfoQueue* myInfo = nullptr;
+		HRESULT hr = device->QueryInterface(IID_PPV_ARGS(&myInfo));
+		if (FAILED(hr))
+			return hr;
+		hr = myInfo->AddApplicationMessage(Severity, pDescription);
+		if (FAILED(hr))
+			return hr;
+		myInfo->Release();
+		return S_OK;
+	}
 }
