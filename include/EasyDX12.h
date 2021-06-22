@@ -1,13 +1,19 @@
 #pragma once
+#ifndef _EASYDX12_H_
+#define _EASYDX12_H_
+
+
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
 #pragma comment(lib,"dxguid.lib")
+
 #include <Winerror.h>
 #include <d3d12.h>
 #include <d3d12sdklayers.h>
 #include <dxgi1_6.h>
 #include <wrl/client.h>
 #include <wrl/wrappers/corewrappers.h>
+#include <sal.h>
 
 namespace EasyDX12 {
 	namespace _internal {
@@ -367,3 +373,4 @@ namespace EasyDX12 {
 		return S_OK;
 	}
 }
+#endif // !_EASYDX12_H_
