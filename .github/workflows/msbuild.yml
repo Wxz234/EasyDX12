@@ -22,7 +22,10 @@ jobs:
       uses: microsoft/setup-msbuild@v1.0.2
 
     - name: Cmake
-      run: cmake
+    - run: 
+        mkdir build
+        cmake
+        
 
     - name: Build
       working-directory: ${{env.GITHUB_WORKSPACE}}
