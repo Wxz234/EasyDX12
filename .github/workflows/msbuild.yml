@@ -33,5 +33,5 @@ jobs:
       run: |
         cd build
         ls
-        msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} .
+        msbuild EasyDX12.sln  /p:Configuration=${{env.BUILD_CONFIGURATION}}
 
