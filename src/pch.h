@@ -9,6 +9,5 @@
 #include <d3d12.h>
 #include <d3d12sdklayers.h>
 #include <wrl/wrappers/corewrappers.h>
-#include <guiddef.h>
 
 #endif 
