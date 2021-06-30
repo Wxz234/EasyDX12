@@ -35,7 +35,6 @@ bool IsMeshShaderSupported(_In_ ID3D12Device* device);
 bool IsVariableRateShadingSupported(_In_ ID3D12Device* device);
 bool IsShaderModelSupported(_In_ ID3D12Device* device, D3D_SHADER_MODEL shader_model);
 HRESULT D3D12Log(_In_ ID3D12Device* device, _In_ D3D12_MESSAGE_SEVERITY Severity, _In_ LPCSTR pDescription);
-HRESULT CreateRenderTargetView(_In_ ID3D12Device* device, _In_ ID3D12Resource* resource, REFIID riid, _COM_Outptr_ void** ppvHeap);
 HRESULT FlushCommandQueue(_In_ ID3D12CommandQueue* queue, _In_ ID3D12Fence* fence, UINT64 value);
 HRESULT FlushCommandQueue(_In_ ID3D12CommandQueue* queue);
 HRESULT CreateUploadHeapBufferResource(_In_ ID3D12Device* device, _In_reads_bytes_(count) const void* data, UINT64 count, _COM_Outptr_ ID3D12Resource** ppvResource)
