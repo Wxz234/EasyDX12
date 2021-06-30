@@ -118,24 +118,24 @@ __declspec(dllexport) HRESULT CreateDefaultComputeCommandAllocator(_In_ ID3D12De
 }
 
 
-__declspec(dllexport) HRESULT CreateRenderTargetView(_In_ ID3D12Device* device, _In_ ID3D12Resource* resource, REFIID riid, _COM_Outptr_ void** ppvHeap) {
-	if (!ppvHeap) {
-		return E_INVALIDARG;
-	}
-	*ppvHeap = nullptr;
-	if (!device || !resource)
-		return E_INVALIDARG;
-	if (riid != IID_ID3D12DescriptorHeap) {
-		return E_NOINTERFACE;
-	}
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> myHeap;
-	HRESULT hr = CreateRTVDescriptorHeap(device, 1, IID_PPV_ARGS(&myHeap));
-	if (FAILED(hr))
-		return hr;
-	device->CreateRenderTargetView(resource, nullptr, myHeap->GetCPUDescriptorHandleForHeapStart());
-	*ppvHeap = myHeap.Detach();
-	return S_OK;
-}
+// __declspec(dllexport) HRESULT CreateRenderTargetView(_In_ ID3D12Device* device, _In_ ID3D12Resource* resource, REFIID riid, _COM_Outptr_ void** ppvHeap) {
+// 	if (!ppvHeap) {
+// 		return E_INVALIDARG;
+// 	}
+// 	*ppvHeap = nullptr;
+// 	if (!device || !resource)
+// 		return E_INVALIDARG;
+// 	if (riid != IID_ID3D12DescriptorHeap) {
+// 		return E_NOINTERFACE;
+// 	}
+// 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> myHeap;
+// 	HRESULT hr = CreateRTVDescriptorHeap(device, 1, IID_PPV_ARGS(&myHeap));
+// 	if (FAILED(hr))
+// 		return hr;
+// 	device->CreateRenderTargetView(resource, nullptr, myHeap->GetCPUDescriptorHandleForHeapStart());
+// 	*ppvHeap = myHeap.Detach();
+// 	return S_OK;
+// }
 
 __declspec(dllexport) HRESULT FlushCommandQueue(_In_ ID3D12CommandQueue* queue, _In_ ID3D12Fence* fence, UINT64 value) {
 	if (!queue || !fence)
