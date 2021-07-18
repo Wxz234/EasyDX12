@@ -9,10 +9,9 @@
 //HRESULT CreateDefaultDevice(REFIID riid, _COM_Outptr_ void** ppDevice);
 //HRESULT CreateDefaultFence(_In_ ID3D12Device* device, UINT64 InitialValue, REFIID riid, _COM_Outptr_ void** ppFence);
 //HRESULT CreateDefaultFactory(REFIID riid, _COM_Outptr_ void** ppFactory);
-//HRESULT GetDefaultAdapter(_In_ IDXGIFactory* factory, REFIID riid, _COM_Outptr_ void** ppvAdapter);
-//HRESULT GetMinimumPowerAdapter(_In_ IDXGIFactory* factory, REFIID riid, _COM_Outptr_ void** ppvAdapter);
-//HRESULT GetHighPerformanceAdapter(_In_ IDXGIFactory* factory, REFIID riid, _COM_Outptr_ void** ppvAdapter);
-
+HRESULT GetDefaultAdapter(_In_ IDXGIFactory* factory, _COM_Outptr_ IDXGIAdapter** ppvAdapter);
+HRESULT GetMinimumPowerAdapter(_In_ IDXGIFactory* factory, _COM_Outptr_ IDXGIAdapter** ppvAdapter);
+HRESULT GetHighPerformanceAdapter(_In_ IDXGIFactory* factory, _COM_Outptr_ IDXGIAdapter** ppvAdapter);
 HRESULT GetWarpAdapter(_In_ IDXGIFactory* factory, _COM_Outptr_ IDXGIAdapter** ppvAdapter);
 bool IsNVIDIAAdapter(_In_ IDXGIAdapter* adapter);
 bool IsAMDAdapter(_In_ IDXGIAdapter* adapter);

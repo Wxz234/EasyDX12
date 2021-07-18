@@ -37,31 +37,19 @@ __declspec(dllexport) HRESULT GetWarpAdapter(IDXGIFactory* factory, IDXGIAdapter
 		return hr;
 	return myfactory4->EnumWarpAdapter(IID_PPV_ARGS(ppvAdapter));
 }
-//__declspec(dllexport) HRESULT GetWarpAdapter(_In_ IDXGIFactory* factory, REFIID riid, _COM_Outptr_ void** ppvAdapter){
-//	if (!ppvAdapter)
-//		return E_INVALIDARG;
-//	*ppvAdapter = nullptr;
-//	if (!factory)
-//		return E_INVALIDARG;
-//	Microsoft::WRL::ComPtr<IDXGIFactory> myfactory(factory);
-//	Microsoft::WRL::ComPtr<IDXGIFactory4> myfactory4;
-//	HRESULT hr = myfactory.As(&myfactory4);
-//	if (FAILED(hr))
-//		return hr;
-//	return myfactory4->EnumWarpAdapter(riid, ppvAdapter);
-//}
+
 //
-//__declspec(dllexport) HRESULT  GetDefaultAdapter(_In_ IDXGIFactory* factory, REFIID riid, _COM_Outptr_ void** ppvAdapter) {
-//	return getAdapter(factory, DXGI_GPU_PREFERENCE_UNSPECIFIED, riid, ppvAdapter);
-//}
-//
-//__declspec(dllexport) HRESULT GetMinimumPowerAdapter(_In_ IDXGIFactory* factory, REFIID riid, _COM_Outptr_ void** ppvAdapter) {
-//	return getAdapter(factory, DXGI_GPU_PREFERENCE_MINIMUM_POWER, riid, ppvAdapter);
-//}
-//
-//__declspec(dllexport) HRESULT GetHighPerformanceAdapter(_In_ IDXGIFactory* factory, REFIID riid, _COM_Outptr_ void** ppvAdapter) {
-//	return getAdapter(factory, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, riid, ppvAdapter);
-//}
+__declspec(dllexport) HRESULT GetDefaultAdapter(IDXGIFactory* factory, IDXGIAdapter** ppvAdapter) {
+	return getAdapter(factory, DXGI_GPU_PREFERENCE_UNSPECIFIED, ppvAdapter);
+}
+
+__declspec(dllexport) HRESULT GetMinimumPowerAdapter(IDXGIFactory* factory, IDXGIAdapter** ppvAdapter) {
+	return getAdapter(factory, DXGI_GPU_PREFERENCE_MINIMUM_POWER, ppvAdapter);
+}
+
+__declspec(dllexport) HRESULT GetHighPerformanceAdapter(IDXGIFactory* factory, IDXGIAdapter** ppvAdapter) {
+	return getAdapter(factory, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, ppvAdapter);
+}
 //
 __declspec(dllexport) bool IsNVIDIAAdapter(IDXGIAdapter* adapter) {
 	return is_adapter(adapter, 0x10DE);
