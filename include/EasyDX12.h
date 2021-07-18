@@ -38,4 +38,6 @@
 //HRESULT CreateUploadHeapBufferResource(_In_ ID3D12Device* device, _In_reads_bytes_(count) const void* data, UINT64 count, _COM_Outptr_ ID3D12Resource** ppvResource)
 
 HRESULT CreateDefaultDirectCommandQueue(_In_ ID3D12Device* device, _COM_Outptr_ ID3D12CommandQueue** ppCommandQueue);
+HRESULT CreateDefaultCopyCommandQueue(_In_ ID3D12Device* device, _COM_Outptr_ ID3D12CommandQueue** ppCommandQueue);
+HRESULT CreateDefaultComputeCommandQueue(_In_ ID3D12Device* device, _COM_Outptr_ ID3D12CommandQueue** ppCommandQueue);
 #endif 
