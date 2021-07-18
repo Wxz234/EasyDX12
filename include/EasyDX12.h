@@ -22,9 +22,7 @@
 //HRESULT CreateUAVDescriptorHeap(_In_ ID3D12Device* device, UINT NumDescriptors, REFIID riid, _COM_Outptr_  void** ppvHeap);
 //HRESULT CreateDSVDescriptorHeap(_In_ ID3D12Device* device, UINT NumDescriptors, REFIID riid, _COM_Outptr_  void** ppvHeap);
 //HRESULT CreateSamplerDescriptorHeap(_In_ ID3D12Device* device, UINT NumDescriptors, REFIID riid, _COM_Outptr_  void** ppvHeap);
-//HRESULT CreateDefaultDirectCommandQueue(_In_ ID3D12Device* device, REFIID riid, _COM_Outptr_ void** ppCommandQueue);
-//HRESULT CreateDefaultCopyCommandQueue(_In_ ID3D12Device* device, REFIID riid, _COM_Outptr_ void** ppCommandQueue);
-//HRESULT CreateDefaultComputeCommandQueue(_In_ ID3D12Device* device, REFIID riid, _COM_Outptr_ void** ppCommandQueue);
+
 //HRESULT CreateDefaultDirectCommandAllocator(_In_ ID3D12Device* device, REFIID riid, _COM_Outptr_ void** ppCommandAllocator);
 //HRESULT CreateDefaultCopyCommandAllocator(_In_ ID3D12Device* device, REFIID riid, _COM_Outptr_ void** ppCommandAllocator);
 //HRESULT CreateDefaultComputeCommandAllocator(_In_ ID3D12Device* device, REFIID riid, _COM_Outptr_ void** ppCommandAllocator);
@@ -40,4 +38,5 @@
 HRESULT CreateDefaultDirectCommandQueue(_In_ ID3D12Device* device, _COM_Outptr_ ID3D12CommandQueue** ppCommandQueue);
 HRESULT CreateDefaultCopyCommandQueue(_In_ ID3D12Device* device, _COM_Outptr_ ID3D12CommandQueue** ppCommandQueue);
 HRESULT CreateDefaultComputeCommandQueue(_In_ ID3D12Device* device, _COM_Outptr_ ID3D12CommandQueue** ppCommandQueue);
+HRESULT CreateDefaultDirectCommandAllocator(_In_ ID3D12Device* device, ID3D12CommandAllocator** ppCommandAllocator);
 #endif 
