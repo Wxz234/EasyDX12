@@ -4,6 +4,7 @@ Microsoft::WRL::ComPtr<ID3D12CommandQueue> my_queue;
 
 
 HRESULT createCommandQueue(ID3D12Device* device, D3D12_COMMAND_LIST_TYPE type, ID3D12CommandQueue** ppCommandQueue) {
+	D3D12_FEATURE_DATA_D3D12_OPTIONS7 featureSupportData = {};
 	if (!ppCommandQueue)
 		return E_INVALIDARG;
 	*ppCommandQueue = nullptr;
