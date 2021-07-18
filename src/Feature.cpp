@@ -1,7 +1,7 @@
 #include "pch.h"
 
 
-__declspec(dllexport) bool IsDirectXRaytracingSupported(_In_ ID3D12Device* device) {
+__declspec(dllexport) bool IsDirectXRaytracingSupported(ID3D12Device* device) {
 	if (!device) {
 		return false;
 	}
@@ -13,7 +13,7 @@ __declspec(dllexport) bool IsDirectXRaytracingSupported(_In_ ID3D12Device* devic
 	return false;
 }
 
-__declspec(dllexport) bool IsMeshShaderSupported(_In_ ID3D12Device* device) {
+__declspec(dllexport) bool IsMeshShaderSupported(ID3D12Device* device) {
 	if (!device) {
 		return false;
 	}
@@ -25,7 +25,7 @@ __declspec(dllexport) bool IsMeshShaderSupported(_In_ ID3D12Device* device) {
 	return false;
 }
 
-__declspec(dllexport) bool IsVariableRateShadingSupported(_In_ ID3D12Device* device) {
+__declspec(dllexport) bool IsVariableRateShadingSupported(ID3D12Device* device) {
 	if (!device) {
 		return false;
 	}
@@ -37,7 +37,7 @@ __declspec(dllexport) bool IsVariableRateShadingSupported(_In_ ID3D12Device* dev
 	return false;
 }
 
-__declspec(dllexport) bool IsShaderModelSupported(_In_ ID3D12Device* device, D3D_SHADER_MODEL shader_model) {
+__declspec(dllexport) bool IsShaderModelSupported(ID3D12Device* device, D3D_SHADER_MODEL shader_model) {
 	if (!device) {
 		return false;
 	}
