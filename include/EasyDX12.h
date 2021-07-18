@@ -1,7 +1,8 @@
 #pragma once
 #ifndef _EASYDX12_H_
 #define _EASYDX12_H_
-
+#include <d3d12.h>
+#include <sal.h>
 
 //HRESULT EnableDebugLayer();
 //HRESULT CreateDefaultDevice(REFIID riid, _COM_Outptr_ void** ppDevice);
@@ -35,4 +36,6 @@
 //HRESULT FlushCommandQueue(_In_ ID3D12CommandQueue* queue, _In_ ID3D12Fence* fence, UINT64 value);
 //HRESULT FlushCommandQueue(_In_ ID3D12CommandQueue* queue);
 //HRESULT CreateUploadHeapBufferResource(_In_ ID3D12Device* device, _In_reads_bytes_(count) const void* data, UINT64 count, _COM_Outptr_ ID3D12Resource** ppvResource)
+
+HRESULT CreateDefaultDirectCommandQueue(_In_ ID3D12Device* device, _COM_Outptr_ ID3D12CommandQueue** ppCommandQueue);
 #endif 
