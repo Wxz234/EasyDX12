@@ -5,6 +5,7 @@
 #include <dxgi1_6.h>
 #include <winerror.h>
 #include <wrl/client.h>
+#include <combaseapi.h>
 
 #include "d3dx12.h"
 

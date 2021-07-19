@@ -1,22 +1,62 @@
 #include "pch.h"
 #include <wrl/wrappers/corewrappers.h>
 #include <Windows.h>
+#include <mutex>
 
-
-namespace ___internal_ {
-	HRESULT ___createCommandQueue(ID3D12Device* device, D3D12_COMMAND_LIST_TYPE type, ID3D12CommandQueue** ppCommandQueue) {
-		if (!ppCommandQueue)
-			return E_INVALIDARG;
-		*ppCommandQueue = nullptr;
-		if (!device)
-			return E_INVALIDARG;
-		D3D12_COMMAND_QUEUE_DESC queueDesc = {};
-		queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-		queueDesc.Type = type;
-		return device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(ppCommandQueue));
+namespace __internal_ {
+	Microsoft::WRL::ComPtr<ID3D12Device> createDevice() {
+		Microsoft::WRL::ComPtr<ID3D12Device> mydevice;
+		D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&mydevice));
+		return mydevice;
+	}
+	Microsoft::WRL::ComPtr<ID3D12Device>& get_device() {
+		static Microsoft::WRL::ComPtr<ID3D12Device> deivce = createDevice();
+		return deivce;
 	}
 
-	HRESULT ___FlushCommandQueue(ID3D12CommandQueue* queue, ID3D12Fence* fence, UINT64 value) {
+	Microsoft::WRL::ComPtr<ID3D12CommandQueue> createQueue() {
+		D3D12_COMMAND_QUEUE_DESC queueDesc = {};
+		queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+		queueDesc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
+		auto& device = get_device();
+		Microsoft::WRL::ComPtr<ID3D12CommandQueue> myqueue;
+		device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&myqueue));
+		return myqueue;
+	}
+
+	Microsoft::WRL::ComPtr<ID3D12CommandQueue>& get_queue() {
+		static Microsoft::WRL::ComPtr<ID3D12CommandQueue> queue = createQueue();
+		return queue;
+	}
+
+	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> createAlloc() {
+		Microsoft::WRL::ComPtr<ID3D12CommandAllocator> myalloc;
+		auto& device = get_device();
+		device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COPY, IID_PPV_ARGS(&myalloc));
+		return myalloc;
+	}
+
+	Microsoft::WRL::ComPtr<ID3D12CommandAllocator>& get_alloc() {
+		static Microsoft::WRL::ComPtr<ID3D12CommandAllocator> alloc = createAlloc();
+		return alloc;
+	}
+
+	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> createList() {
+		Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> mylist;
+		auto& device = get_device();
+		auto& alloc = get_alloc();
+		device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COPY, alloc.Get(), nullptr, IID_PPV_ARGS(&mylist));
+		mylist->Close();
+		return mylist;
+	}
+
+	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList>& get_list() {
+		static Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> list = createList();
+		return list;
+	}
+
+
+	HRESULT _flushCommandQueue(ID3D12CommandQueue* queue, ID3D12Fence* fence, UINT64 value) {
 		if (!queue || !fence)
 			return E_INVALIDARG;
 		HRESULT hr = queue->Signal(fence, value);
@@ -31,7 +71,7 @@ namespace ___internal_ {
 		return S_OK;
 	}
 
-	HRESULT __FlushCommandQueue(ID3D12CommandQueue* queue) {
+	HRESULT __flushCommandQueue(ID3D12CommandQueue* queue) {
 		if (!queue)
 			return E_INVALIDARG;
 		Microsoft::WRL::ComPtr<ID3D12Device> myDevice;
@@ -42,9 +82,11 @@ namespace ___internal_ {
 		hr = myDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&myFence));
 		if (FAILED(hr))
 			return hr;
-		return ___FlushCommandQueue(queue, myFence.Get(), 1);
+		return _flushCommandQueue(queue, myFence.Get(), 1);
 	}
 }
+
+std::mutex my_mutex;
 
 __declspec(dllexport) HRESULT CreateUploadHeapBufferResource(ID3D12Device* device, const void* data, UINT64 count, ID3D12Resource** ppvResource) {
 	if (!ppvResource)
@@ -93,9 +135,16 @@ __declspec(dllexport) HRESULT CreateUploadHeapBufferResource(ID3D12Device* devic
 	return S_OK;
 }
 
+
+void _reset() {
+	auto& alloc = __internal_::get_alloc();
+	auto& list = __internal_::get_list();
+	alloc->Reset();
+	list->Reset(alloc.Get(), nullptr);
+}
+
 __declspec(dllexport) HRESULT CreateDefaultHeapBufferResource(
 	ID3D12Device* device,
-	ID3D12CommandList* cmdList,
 	const void* data,
 	UINT64 count,
 	ID3D12Resource** ppvResource)
@@ -103,7 +152,7 @@ __declspec(dllexport) HRESULT CreateDefaultHeapBufferResource(
 	if (!ppvResource)
 		return E_INVALIDARG;
 	*ppvResource = nullptr;
-	if (!device || !cmdList || !data || !count)
+	if (!device || !data || !count)
 		return E_INVALIDARG;
 	Microsoft::WRL::ComPtr<ID3D12Resource> defaultBuffer;
 
@@ -116,7 +165,7 @@ __declspec(dllexport) HRESULT CreateDefaultHeapBufferResource(
 		IID_PPV_ARGS(&defaultBuffer));
 	if (FAILED(hr))
 		return hr;
-	
+	//
 	Microsoft::WRL::ComPtr<ID3D12Resource> uploadBuffer;
 	hr = CreateUploadHeapBufferResource(device, data, count, &uploadBuffer);
 	if (FAILED(hr))
@@ -127,29 +176,30 @@ __declspec(dllexport) HRESULT CreateDefaultHeapBufferResource(
 	subResourceData.RowPitch = count;
 	subResourceData.SlicePitch = subResourceData.RowPitch;
 
-	Microsoft::WRL::ComPtr<ID3D12CommandList> _list(cmdList);
-	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> my_list;
-	hr = _list.As(&my_list);
-	if (FAILED(hr))
-		return hr;
 
-	my_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(defaultBuffer.Get(),
-		D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST));
-	UpdateSubresources<1>(my_list.Get(), defaultBuffer.Get(), uploadBuffer.Get(), 0, 0, 1, &subResourceData);
-	my_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(defaultBuffer.Get(),
-		D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COMMON));
-
-	////sync
-	//Microsoft::WRL::ComPtr<ID3D12CommandQueue> my_queue;
-	//hr = ___internal_::___createCommandQueue(device, D3D12_COMMAND_LIST_TYPE_COPY, &my_queue);
-	//if (FAILED(hr))
-	//	return hr;
-
-	//hr = ___internal_::__FlushCommandQueue(my_queue.Get());
-	//if (FAILED(hr))
-	//	return hr;
-
-	//*ppvResource = defaultBuffer.Detach();
+	my_mutex.lock();
+	{
+		_reset();
+		auto& my_list = __internal_::get_list();
+		my_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(defaultBuffer.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST));
+		UpdateSubresources<1>(my_list.Get(), defaultBuffer.Get(), uploadBuffer.Get(), 0, 0, 1, &subResourceData);
+		my_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(defaultBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COMMON));
+		hr = my_list->Close();
+		if (FAILED(hr)) {
+			my_mutex.unlock();
+			return hr;
+		}
+		auto& my_queue = __internal_::get_queue();
+		ID3D12CommandList* ppCommandLists[] = { my_list.Get() };
+		my_queue->ExecuteCommandLists(1, ppCommandLists);
+		hr = __internal_::__flushCommandQueue(my_queue.Get());
+		if (FAILED(hr)) {
+			my_mutex.unlock();
+			return hr;
+		}
+	}
+	my_mutex.unlock();
+	*ppvResource = defaultBuffer.Detach();
 	return S_OK;
 }
 
