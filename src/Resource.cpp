@@ -1,11 +1,6 @@
 #include "pch.h"
 #include <Windows.h>
 
-Microsoft::WRL::ComPtr<ID3D12CommandQueue> myqueue;
-Microsoft::WRL::ComPtr<ID3D12CommandAllocator> myalloc;
-Microsoft::WRL::ComPtr<ID3D12CommandList> mylist;
-
-HRESULT CreateDefaultCopyCommandQueue(_In_ ID3D12Device* device, _COM_Outptr_ ID3D12CommandQueue** ppCommandQueue);
 
 __declspec(dllexport) HRESULT CreateUploadHeapBufferResource(ID3D12Device* device, const void* data, UINT64 count, ID3D12Resource** ppvResource) {
 	if (!ppvResource)
@@ -53,4 +48,9 @@ __declspec(dllexport) HRESULT CreateUploadHeapBufferResource(ID3D12Device* devic
 	*ppvResource = uploadBuffer.Detach();
 	return S_OK;
 }
+
+__declspec(dllexport) HRESULT CreateDefalutHeapBufferResource(ID3D12Device* device, const void* data, UINT64 count, ID3D12Resource** ppvResource) {
+
+}
+
 
