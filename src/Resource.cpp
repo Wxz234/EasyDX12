@@ -1,6 +1,50 @@
 #include "pch.h"
+#include <wrl/wrappers/corewrappers.h>
 #include <Windows.h>
 
+
+namespace ___internal_ {
+	HRESULT ___createCommandQueue(ID3D12Device* device, D3D12_COMMAND_LIST_TYPE type, ID3D12CommandQueue** ppCommandQueue) {
+		if (!ppCommandQueue)
+			return E_INVALIDARG;
+		*ppCommandQueue = nullptr;
+		if (!device)
+			return E_INVALIDARG;
+		D3D12_COMMAND_QUEUE_DESC queueDesc = {};
+		queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+		queueDesc.Type = type;
+		return device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(ppCommandQueue));
+	}
+
+	HRESULT ___FlushCommandQueue(ID3D12CommandQueue* queue, ID3D12Fence* fence, UINT64 value) {
+		if (!queue || !fence)
+			return E_INVALIDARG;
+		HRESULT hr = queue->Signal(fence, value);
+		if (FAILED(hr))
+			return hr;
+		Microsoft::WRL::Wrappers::Event m_fenceEvent;
+		m_fenceEvent.Attach(CreateEvent(nullptr, FALSE, FALSE, nullptr));
+		hr = fence->SetEventOnCompletion(value, m_fenceEvent.Get());
+		if (FAILED(hr))
+			return hr;
+		WaitForSingleObject(m_fenceEvent.Get(), INFINITE);
+		return S_OK;
+	}
+
+	HRESULT __FlushCommandQueue(ID3D12CommandQueue* queue) {
+		if (!queue)
+			return E_INVALIDARG;
+		Microsoft::WRL::ComPtr<ID3D12Device> myDevice;
+		HRESULT hr = queue->GetDevice(IID_PPV_ARGS(&myDevice));
+		if (FAILED(hr))
+			return hr;
+		Microsoft::WRL::ComPtr<ID3D12Fence> myFence;
+		hr = myDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&myFence));
+		if (FAILED(hr))
+			return hr;
+		return ___FlushCommandQueue(queue, myFence.Get(), 1);
+	}
+}
 
 __declspec(dllexport) HRESULT CreateUploadHeapBufferResource(ID3D12Device* device, const void* data, UINT64 count, ID3D12Resource** ppvResource) {
 	if (!ppvResource)
@@ -49,56 +93,64 @@ __declspec(dllexport) HRESULT CreateUploadHeapBufferResource(ID3D12Device* devic
 	return S_OK;
 }
 
-Microsoft::WRL::ComPtr<ID3D12Resource> CreateDefaultBuffer(
+__declspec(dllexport) HRESULT CreateDefaultHeapBufferResource(
 	ID3D12Device* device,
-	ID3D12GraphicsCommandList* cmdList,
-	const void* initData,
-	UINT64 byteSize,
-	Microsoft::WRL::ComPtr<ID3D12Resource>& uploadBuffer)
+	ID3D12CommandList* cmdList,
+	const void* data,
+	UINT64 count,
+	ID3D12Resource** ppvResource)
 {
-	ComPtr<ID3D12Resource> defaultBuffer;
+	if (!ppvResource)
+		return E_INVALIDARG;
+	*ppvResource = nullptr;
+	if (!device || !cmdList || !data || !count)
+		return E_INVALIDARG;
+	Microsoft::WRL::ComPtr<ID3D12Resource> defaultBuffer;
 
-	// Create the actual default buffer resource.
-	ThrowIfFailed(device->CreateCommittedResource(
+	HRESULT hr = device->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 		D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Buffer(byteSize),
+		&CD3DX12_RESOURCE_DESC::Buffer(count),
 		D3D12_RESOURCE_STATE_COMMON,
 		nullptr,
-		IID_PPV_ARGS(defaultBuffer.GetAddressOf())));
+		IID_PPV_ARGS(&defaultBuffer));
+	if (FAILED(hr))
+		return hr;
+	
+	Microsoft::WRL::ComPtr<ID3D12Resource> uploadBuffer;
+	hr = CreateUploadHeapBufferResource(device, data, count, &uploadBuffer);
+	if (FAILED(hr))
+		return hr;
 
-	// In order to copy CPU memory data into our default buffer, we need to create
-	// an intermediate upload heap. 
-	ThrowIfFailed(device->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-		D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Buffer(byteSize),
-		D3D12_RESOURCE_STATE_GENERIC_READ,
-		nullptr,
-		IID_PPV_ARGS(uploadBuffer.GetAddressOf())));
-
-
-	// Describe the data we want to copy into the default buffer.
 	D3D12_SUBRESOURCE_DATA subResourceData = {};
-	subResourceData.pData = initData;
-	subResourceData.RowPitch = byteSize;
+	subResourceData.pData = data;
+	subResourceData.RowPitch = count;
 	subResourceData.SlicePitch = subResourceData.RowPitch;
 
-	// Schedule to copy the data to the default buffer resource.  At a high level, the helper function UpdateSubresources
-	// will copy the CPU memory into the intermediate upload heap.  Then, using ID3D12CommandList::CopySubresourceRegion,
-	// the intermediate upload heap data will be copied to mBuffer.
-	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(defaultBuffer.Get(),
+	Microsoft::WRL::ComPtr<ID3D12CommandList> _list(cmdList);
+	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> my_list;
+	hr = _list.As(&my_list);
+	if (FAILED(hr))
+		return hr;
+
+	my_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(defaultBuffer.Get(),
 		D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST));
-	UpdateSubresources<1>(cmdList, defaultBuffer.Get(), uploadBuffer.Get(), 0, 0, 1, &subResourceData);
-	cmdList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(defaultBuffer.Get(),
-		D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ));
+	UpdateSubresources<1>(my_list.Get(), defaultBuffer.Get(), uploadBuffer.Get(), 0, 0, 1, &subResourceData);
+	my_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(defaultBuffer.Get(),
+		D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COMMON));
 
-	// Note: uploadBuffer has to be kept alive after the above function calls because
-	// the command list has not been executed yet that performs the actual copy.
-	// The caller can Release the uploadBuffer after it knows the copy has been executed.
+	//sync
+	Microsoft::WRL::ComPtr<ID3D12CommandQueue> my_queue;
+	hr = ___internal_::___createCommandQueue(device, D3D12_COMMAND_LIST_TYPE_COPY, &my_queue);
+	if (FAILED(hr))
+		return hr;
 
+	hr = ___internal_::__FlushCommandQueue(my_queue.Get());
+	if (FAILED(hr))
+		return hr;
 
-	return defaultBuffer;
+	*ppvResource = defaultBuffer.Detach();
+	return S_OK;
 }
 
 
