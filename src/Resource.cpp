@@ -139,17 +139,17 @@ __declspec(dllexport) HRESULT CreateDefaultHeapBufferResource(
 	my_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(defaultBuffer.Get(),
 		D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COMMON));
 
-	//sync
-	Microsoft::WRL::ComPtr<ID3D12CommandQueue> my_queue;
-	hr = ___internal_::___createCommandQueue(device, D3D12_COMMAND_LIST_TYPE_COPY, &my_queue);
-	if (FAILED(hr))
-		return hr;
+	////sync
+	//Microsoft::WRL::ComPtr<ID3D12CommandQueue> my_queue;
+	//hr = ___internal_::___createCommandQueue(device, D3D12_COMMAND_LIST_TYPE_COPY, &my_queue);
+	//if (FAILED(hr))
+	//	return hr;
 
-	hr = ___internal_::__FlushCommandQueue(my_queue.Get());
-	if (FAILED(hr))
-		return hr;
+	//hr = ___internal_::__FlushCommandQueue(my_queue.Get());
+	//if (FAILED(hr))
+	//	return hr;
 
-	*ppvResource = defaultBuffer.Detach();
+	//*ppvResource = defaultBuffer.Detach();
 	return S_OK;
 }
 
