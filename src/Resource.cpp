@@ -175,8 +175,8 @@ __declspec(dllexport) HRESULT CreateDefaultHeapBufferResource(
 	subResourceData.RowPitch = count;
 	subResourceData.SlicePitch = subResourceData.RowPitch;
 
-	const std::lock_guard<std::mutex> lock(my_mutex);
 	{
+		const std::lock_guard<std::mutex> lock(my_mutex);
 		__internal_::_reset();
 		auto& my_list = __internal_::get_list();
 		my_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(defaultBuffer.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST));
