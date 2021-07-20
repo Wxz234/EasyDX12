@@ -142,9 +142,6 @@ __declspec(dllexport) HRESULT CreateUploadHeapBufferResource(ID3D12Device* devic
 	return S_OK;
 }
 
-
-
-
 __declspec(dllexport) HRESULT CreateDefaultHeapBufferResource(
 	ID3D12Device* device,
 	const void* data,
