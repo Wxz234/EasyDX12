@@ -3,6 +3,8 @@
 #include <Windows.h>
 #include <mutex>
 
+std::mutex my_mutex;
+
 namespace __internal_ {
 	Microsoft::WRL::ComPtr<ID3D12Device> createDevice() {
 		Microsoft::WRL::ComPtr<ID3D12Device> mydevice;
@@ -84,9 +86,14 @@ namespace __internal_ {
 			return hr;
 		return _flushCommandQueue(queue, myFence.Get(), 1);
 	}
-}
 
-std::mutex my_mutex;
+	void _reset() {
+		auto& alloc = get_alloc();
+		auto& list = get_list();
+		alloc->Reset();
+		list->Reset(alloc.Get(), nullptr);
+	}
+}
 
 __declspec(dllexport) HRESULT CreateUploadHeapBufferResource(ID3D12Device* device, const void* data, UINT64 count, ID3D12Resource** ppvResource) {
 	if (!ppvResource)
@@ -136,12 +143,7 @@ __declspec(dllexport) HRESULT CreateUploadHeapBufferResource(ID3D12Device* devic
 }
 
 
-void _reset() {
-	auto& alloc = __internal_::get_alloc();
-	auto& list = __internal_::get_list();
-	alloc->Reset();
-	list->Reset(alloc.Get(), nullptr);
-}
+
 
 __declspec(dllexport) HRESULT CreateDefaultHeapBufferResource(
 	ID3D12Device* device,
@@ -176,17 +178,15 @@ __declspec(dllexport) HRESULT CreateDefaultHeapBufferResource(
 	subResourceData.RowPitch = count;
 	subResourceData.SlicePitch = subResourceData.RowPitch;
 
-
-	my_mutex.lock();
+	const std::lock_guard<std::mutex> lock(my_mutex);
 	{
-		_reset();
+		__internal_::_reset();
 		auto& my_list = __internal_::get_list();
 		my_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(defaultBuffer.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST));
 		UpdateSubresources<1>(my_list.Get(), defaultBuffer.Get(), uploadBuffer.Get(), 0, 0, 1, &subResourceData);
 		my_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(defaultBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COMMON));
 		hr = my_list->Close();
 		if (FAILED(hr)) {
-			my_mutex.unlock();
 			return hr;
 		}
 		auto& my_queue = __internal_::get_queue();
@@ -194,11 +194,9 @@ __declspec(dllexport) HRESULT CreateDefaultHeapBufferResource(
 		my_queue->ExecuteCommandLists(1, ppCommandLists);
 		hr = __internal_::__flushCommandQueue(my_queue.Get());
 		if (FAILED(hr)) {
-			my_mutex.unlock();
 			return hr;
 		}
 	}
-	my_mutex.unlock();
 	*ppvResource = defaultBuffer.Detach();
 	return S_OK;
 }
