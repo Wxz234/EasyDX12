@@ -21,13 +21,13 @@ jobs:
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2
 
-    - name: Cmake
+    - name: cmake
       run: |
         mkdir build
         cmake -G"Visual Studio 16 2019" -B ./build
         
 
-    - name: Build
+    - name: try_to_build
       working-directory: ${{env.GITHUB_WORKSPACE}}
       
       run: |
