@@ -24,7 +24,10 @@ namespace __internal_ {
 
 	UINT get_adapter_count() {
 		auto& factory = get_factory();
-		return 1;
+		Microsoft::WRL::ComPtr<IDXGIAdapter> my_adapter;
+		UINT i = 0;
+		for (; factory->EnumAdapters(i, &my_adapter) != DXGI_ERROR_NOT_FOUND; ++i);
+		return i;
 	}
 	
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Device>> createDevices() {
