@@ -11,6 +11,27 @@ namespace __internal_ {
 		return __my_mutex;
 	}
 
+	Microsoft::WRL::ComPtr<IDXGIFactory> createFactory() {
+		Microsoft::WRL::ComPtr<IDXGIFactory> myfactory;
+		CreateDXGIFactory2(0, IID_PPV_ARGS(&myfactory));
+		return myfactory;
+	}
+
+	Microsoft::WRL::ComPtr<IDXGIFactory>& get_factory() {
+		static Microsoft::WRL::ComPtr<IDXGIFactory> factory = createFactory();
+		return factory;
+	}
+
+	UINT get_adapter_count() {
+		auto& factory = get_factory();
+		return 1;
+	}
+	
+	std::vector<Microsoft::WRL::ComPtr<ID3D12Device>> createDevices() {
+		std::vector<Microsoft::WRL::ComPtr<ID3D12Device>> devices;
+		return devices;
+	}
+
 	Microsoft::WRL::ComPtr<ID3D12Device> createDevice() {
 		Microsoft::WRL::ComPtr<ID3D12Device> mydevice;
 		D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&mydevice));
@@ -61,7 +82,6 @@ namespace __internal_ {
 		static Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> list = createList();
 		return list;
 	}
-
 
 	HRESULT _flushCommandQueue(ID3D12CommandQueue* queue, ID3D12Fence* fence, UINT64 value) {
 		if (!queue || !fence)
