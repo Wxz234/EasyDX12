@@ -11,30 +11,6 @@ namespace __internal_ {
 		return __my_mutex;
 	}
 
-	Microsoft::WRL::ComPtr<IDXGIFactory> createFactory() {
-		Microsoft::WRL::ComPtr<IDXGIFactory> myfactory;
-		CreateDXGIFactory2(0, IID_PPV_ARGS(&myfactory));
-		return myfactory;
-	}
-
-	Microsoft::WRL::ComPtr<IDXGIFactory>& get_factory() {
-		static Microsoft::WRL::ComPtr<IDXGIFactory> factory = createFactory();
-		return factory;
-	}
-
-	UINT get_adapter_count() {
-		auto& factory = get_factory();
-		Microsoft::WRL::ComPtr<IDXGIAdapter> my_adapter;
-		UINT i = 0;
-		for (; factory->EnumAdapters(i, &my_adapter) != DXGI_ERROR_NOT_FOUND; ++i);
-		return i;
-	}
-	
-	std::vector<Microsoft::WRL::ComPtr<ID3D12Device>> createDevices() {
-		std::vector<Microsoft::WRL::ComPtr<ID3D12Device>> devices;
-		return devices;
-	}
-
 	Microsoft::WRL::ComPtr<ID3D12Device> createDevice() {
 		Microsoft::WRL::ComPtr<ID3D12Device> mydevice;
 		D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&mydevice));
