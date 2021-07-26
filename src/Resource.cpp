@@ -1,6 +1,5 @@
 #include "pch.h"
-#include <wrl/wrappers/corewrappers.h>
-#include <Windows.h>
+#include "d3dx12.h"
 #include <mutex>
 #include <vector>
 

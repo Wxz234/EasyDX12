@@ -1,6 +1,5 @@
 #include "pch.h"
 
-
 __declspec(dllexport) bool IsDirectXRaytracingSupported(ID3D12Device* device) {
 	if (!device) {
 		return false;
