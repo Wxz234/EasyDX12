@@ -11,7 +11,6 @@ namespace __internal_ {
 		return __my_mutex;
 	}
 
-
 	Microsoft::WRL::ComPtr<ID3D12Device> createDevice() {
 		Microsoft::WRL::ComPtr<ID3D12Device> mydevice;
 		D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&mydevice));
@@ -182,7 +181,8 @@ __declspec(dllexport) HRESULT CreateDefaultHeapBufferResource(
 	subResourceData.SlicePitch = subResourceData.RowPitch;
 
 	{
-		const std::lock_guard<std::mutex> lock(__internal_::get_mutex());
+		auto& my_mutex = __internal_::get_mutex();
+		const std::lock_guard<std::mutex> lock(my_mutex);
 		__internal_::_reset();
 		auto& my_list = __internal_::get_list();
 		my_list->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(defaultBuffer.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST));
